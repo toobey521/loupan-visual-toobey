@@ -73,19 +73,53 @@
     var buildingMap = {}; // id -> building
 
     function makeWindowTexture(floors, cols, lit) {
+        // 竖长画布匹配楼面比例, 每户一格: 窗框+玻璃, 墙体+隔墙线+楼层线 (真实感小方格)
+        var W = 256, H = 1024;
         var c = document.createElement('canvas');
-        c.width = 256; c.height = 256;
+        c.width = W; c.height = H;
         var ctx = c.getContext('2d');
-        ctx.fillStyle = '#101a30';
-        ctx.fillRect(0, 0, 256, 256);
-        var fh = 256 / (floors || 16);
-        var cw = 256 / (cols || 4);
-        for (var f = 0; f < (floors || 16); f++) {
+        var rows = (floors || 16), cw = W / (cols || 4), ch = H / rows;
+        // 墙体
+        ctx.fillStyle = '#161e34';
+        ctx.fillRect(0, 0, W, H);
+        for (var f = 0; f < rows; f++) {
             for (var cc = 0; cc < (cols || 4); cc++) {
+                var x = cc * cw, y = f * ch;
+                // 每户玻璃窗 (随机亮灯)
                 var on = Math.random() < (lit || 0.55);
-                ctx.fillStyle = on ? 'rgba(140, 220, 255, 0.85)' : 'rgba(20, 32, 60, 0.9)';
-                ctx.fillRect(cc * cw + cw * 0.2, f * fh + fh * 0.18, cw * 0.6, fh * 0.55);
+                var wx = x + cw * 0.14, ww = cw * 0.72;
+                var wy = y + ch * 0.18, wh = ch * 0.62;
+                ctx.fillStyle = on ? 'rgba(160, 228, 255, 0.92)' : 'rgba(22, 34, 60, 0.98)';
+                ctx.fillRect(wx, wy, ww, wh);
+                // 窗框
+                ctx.strokeStyle = 'rgba(10, 16, 30, 0.85)';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(wx, wy, ww, wh);
+                // 窗格中竖线 (双扇窗)
+                ctx.beginPath();
+                ctx.moveTo(wx + ww / 2, wy);
+                ctx.lineTo(wx + ww / 2, wy + wh);
+                ctx.stroke();
+                // 窗台中横线
+                ctx.beginPath();
+                ctx.moveTo(wx, wy + wh * 0.5);
+                ctx.lineTo(wx + ww, wy + wh * 0.5);
+                ctx.stroke();
+                // 户间墙缝
+                ctx.strokeStyle = 'rgba(10, 16, 30, 0.9)';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(x + cw, y);
+                ctx.lineTo(x + cw, y + ch);
+                ctx.stroke();
             }
+            // 楼层分隔线 (楼板)
+            ctx.strokeStyle = 'rgba(8, 12, 24, 0.95)';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(0, (f + 1) * ch);
+            ctx.lineTo(W, (f + 1) * ch);
+            ctx.stroke();
         }
         var tex = new THREE.CanvasTexture(c);
         tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
@@ -96,7 +130,9 @@
         var maxF = 0;
         UNITS.forEach(function (u) {
             if (u.building === buildingId) {
-                var n = parseInt(String(u.room).replace(/[^0-9]/g, ''), 10);
+                // 商铺复式房号 "101/201" 取第一段; 房号规则: 左起前两位=楼层, 最右=户位
+                var first = String(u.room).split('/')[0];
+                var n = parseInt(first.replace(/[^0-9]/g, ''), 10) || 0;
                 var f = Math.floor(n / 100) || 1;
                 if (f > maxF) maxF = f;
             }
@@ -104,19 +140,21 @@
         return maxF || 16;
     }
 
-    // 每层户数: 统计该楼栋最常见的同层房间号个数 (每户一窗, 窗户=真实房屋)
+    // 每层户数: 按编号规则(最右数字=户位)统计每层不同户位个数, 取最常见值 (每户一窗)
     function unitsPerFloorOf(buildingId) {
         var perFloor = {};
         UNITS.forEach(function (u) {
             if (u.building !== buildingId) return;
-            var n = parseInt(String(u.room).replace(/[^0-9]/g, ''), 10);
+            var first = String(u.room).split('/')[0];
+            var n = parseInt(first.replace(/[^0-9]/g, ''), 10) || 0;
             var floor = Math.floor(n / 100) || 1;
-            if (!perFloor[floor]) perFloor[floor] = 0;
-            perFloor[floor]++;
+            var unit = n % 10;                    // 户位 = 最右数字
+            if (!perFloor[floor]) perFloor[floor] = {};
+            perFloor[floor][unit] = true;
         });
         var counts = {};
         for (var f in perFloor) {
-            var c = perFloor[f];
+            var c = Object.keys(perFloor[f]).length;
             counts[c] = (counts[c] || 0) + 1;
         }
         var best = 0, bestC = 0;
@@ -136,14 +174,14 @@
         function mapX(v) { return 12 + (v - minX) / spanX * 76; }  // 12 ~ 88
         function mapY(v) { return 12 + (v - minY) / spanY * 74; }  // 12 ~ 86
         src.forEach(function (b) {
+            var shop = !!b.shop;
+            if (shop) return;   // 商铺楼栋 (S2/S3/S4/13商/18商/19商/20商) 3D 不展示
             var x = mapX(b.x + (b.w || 5) / 2);
             var z = mapY(b.y + (b.h || 7) / 2);
             var w = Math.max(4.5, (b.w || 5) * 1.15);   // 保持总平图上的楼栋宽比例
             var d = Math.max(4.5, (b.h || 7) * 0.5);    // 长条高度转为进深, 半系数防重叠
             var floors = floorCountOf(b.id);
             var h = Math.max(6, floors * 3.1);
-            var shop = !!b.shop;
-            if (shop) { w = Math.max(5, w); d = 4.5; }
 
             var geo = new THREE.BoxGeometry(w, h, d);
             var cols = shop ? 4 : unitsPerFloorOf(b.id);   // 每层户数 = 窗户列数 (窗户对应真实房屋)
@@ -239,17 +277,16 @@
     var selB = null, selR = null;        // 当前选中的 楼栋(数据名)/房号
     var hlMarker = null;                 // 目标户窗户高亮标记
 
-    // 填充楼栋下拉（按楼栋号排序）
+    // 填充楼栋下拉（按楼栋号排序, 商铺楼栋不展示）
     function fillBuildings() {
         var list = document.getElementById('bdList');
-        var sorted = HOTSPOTS.slice().sort(function (a, b) {
+        var sorted = HOTSPOTS.filter(function (b) { return !b.shop; }).slice().sort(function (a, b) {
             var na = parseInt(String(a.id).replace(/[^0-9]/g, ''), 10) || 999;
             var nb = parseInt(String(b.id).replace(/[^0-9]/g, ''), 10) || 999;
             return na - nb;
         });
         list.innerHTML = sorted.map(function (b) {
-            var shop = !!b.shop;
-            return '<div class="dd-item' + (shop ? ' shop-dd' : '') + '" data-b="' + b.id + '" onclick="pickBuilding(this)">' + bname(b.id) + '</div>';
+            return '<div class="dd-item" data-b="' + b.id + '" onclick="pickBuilding(this)">' + bname(b.id) + '</div>';
         }).join('');
     }
 
@@ -304,20 +341,11 @@
         targetLook = new THREE.Vector3(bd.x, bd.h * 0.3, bd.z);
     }
 
-    // 该户在其楼层内的序号（决定窗户列）
+    // 该户窗户列 (编号规则: 最右数字=户位, 户位-1 = 列)
     function unitIndexInFloor(u) {
-        // 商铺复式房号 "101/201" 取第一段 (101 → 1层)
         var first = String(u.room).split('/')[0];
         var n = parseInt(first.replace(/[^0-9]/g, ''), 10) || 0;
-        var floor = Math.floor(n / 100) || 1;
-        var same = UNITS.filter(function (x) {
-            if (x.building !== u.building) return false;
-            var xf = String(x.room).split('/')[0];
-            var xn = parseInt(xf.replace(/[^0-9]/g, ''), 10) || 0;
-            return (Math.floor(xn / 100) || 1) === floor;
-        }).sort(function (a, b) { return String(a.room).localeCompare(String(b.room), 'zh'); });
-        for (var i = 0; i < same.length; i++) if (same[i].room === u.room) return i;
-        return 0;
+        return Math.max(0, (n % 10) - 1);
     }
 
     // 目标户窗户高亮标记（闪光星光形象）
