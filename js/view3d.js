@@ -239,13 +239,30 @@
     var selB = null, selR = null;        // 当前选中的 楼栋(数据名)/房号
     var hlMarker = null;                 // 目标户窗户高亮标记
 
-    // 填充楼栋下拉（按总平图热点顺序）
+    // 填充楼栋下拉（按楼栋号排序）
     function fillBuildings() {
         var list = document.getElementById('bdList');
-        list.innerHTML = HOTSPOTS.map(function (b) {
+        var sorted = HOTSPOTS.slice().sort(function (a, b) {
+            var na = parseInt(String(a.id).replace(/[^0-9]/g, ''), 10) || 999;
+            var nb = parseInt(String(b.id).replace(/[^0-9]/g, ''), 10) || 999;
+            return na - nb;
+        });
+        list.innerHTML = sorted.map(function (b) {
             var shop = !!b.shop;
             return '<div class="dd-item' + (shop ? ' shop-dd' : '') + '" data-b="' + b.id + '" onclick="pickBuilding(this)">' + bname(b.id) + '</div>';
         }).join('');
+    }
+
+    // HOTSPOTS id → UNITS building 兼容匹配（如 S3# ↔ S3商铺#）
+    function resolveBuilding(bid) {
+        var hit = null;
+        UNITS.forEach(function (u) { if (u.building === bid) hit = bid; });
+        if (hit) return bid;
+        var alt = bid.replace('#', '商铺#');   // S3# → S3商铺#
+        var hit2 = null;
+        UNITS.forEach(function (u) { if (u.building === alt) hit2 = alt; });
+        if (hit2) return hit2;
+        return bid;
     }
 
     // 选择楼栋 → 填充房号 + 镜头飞向楼栋
@@ -259,13 +276,14 @@
         closeDD();
         hideDetail();
         // 房号列表（按楼层/户号排序）
-        var rooms = UNITS.filter(function (u) { return u.building === selB; })
+        var rb = resolveBuilding(selB);
+        var rooms = UNITS.filter(function (u) { return u.building === rb; })
             .sort(function (a, b) { return String(a.room).localeCompare(String(b.room), 'zh'); });
         document.getElementById('rmList').innerHTML = rooms.map(function (u) {
             return '<div class="dd-item" data-r="' + u.room + '" onclick="pickRoom(this)">' + u.room.replace(/^商/, '') + '</div>';
         }).join('');
         flyToBuilding(selB);
-        document.getElementById('modeTag').textContent = '已选楼栋: ' + bname(selB);
+        document.getElementById('modeTag').textContent = '已选楼栋: ' + bname(selB) + '（' + rooms.length + ' 套）';
     }
 
     // 选择房号 → 定位到该户（镜头对准楼层 + 窗户高亮）
@@ -288,11 +306,14 @@
 
     // 该户在其楼层内的序号（决定窗户列）
     function unitIndexInFloor(u) {
-        var n = parseInt(String(u.room).replace(/[^0-9]/g, ''), 10);
+        // 商铺复式房号 "101/201" 取第一段 (101 → 1层)
+        var first = String(u.room).split('/')[0];
+        var n = parseInt(first.replace(/[^0-9]/g, ''), 10) || 0;
         var floor = Math.floor(n / 100) || 1;
         var same = UNITS.filter(function (x) {
             if (x.building !== u.building) return false;
-            var xn = parseInt(String(x.room).replace(/[^0-9]/g, ''), 10);
+            var xf = String(x.room).split('/')[0];
+            var xn = parseInt(xf.replace(/[^0-9]/g, ''), 10) || 0;
             return (Math.floor(xn / 100) || 1) === floor;
         }).sort(function (a, b) { return String(a.room).localeCompare(String(b.room), 'zh'); });
         for (var i = 0; i < same.length; i++) if (same[i].room === u.room) return i;
@@ -348,16 +369,19 @@
 
     // 定位到具体房号
     function locateRoom(bid, room) {
+        var rb = resolveBuilding(bid);
         var u = null;
         for (var i = 0; i < UNITS.length; i++) {
-            if (UNITS[i].building === bid && String(UNITS[i].room) === room) { u = UNITS[i]; break; }
+            if (UNITS[i].building === rb && String(UNITS[i].room) === room) { u = UNITS[i]; break; }
         }
         if (!u) { document.getElementById('modeTag').textContent = '未找到该房号'; return; }
-        var bd = buildingMap[u.building];
+        // buildingMap 以 HOTSPOTS id 建图(S3#), UNITS building 可能是 S3商铺# → 优先用传入的 bid
+        var bd = buildingMap[bid] || buildingMap[u.building];
         if (!bd) return;
         locating = true; cruisePaused = 60;
         // 目标户窗户 3D 位置
-        var n = parseInt(String(u.room).replace(/[^0-9]/g, ''), 10);
+        var first = String(u.room).split('/')[0];   // 商铺复式房号 "101/201" 取第一段
+        var n = parseInt(first.replace(/[^0-9]/g, ''), 10) || 0;
         var floor = Math.floor(n / 100) || 1;
         var unitIdx = unitIndexInFloor(u);
         var cols = Math.max(1, unitsPerFloorOf(bd.id));
