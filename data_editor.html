@@ -53,6 +53,13 @@
     .toolbar {
         max-width: 1400px; margin: 16px auto 0; padding: 0 16px;
         display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+        position: sticky; /* top 由 JS 动态设置 */
+        z-index: 90;
+        background: rgba(8, 13, 28, 0.92);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-bottom: 1px solid rgba(0, 200, 255, 0.15);
+        padding-bottom: 12px;
     }
     .toolbar .stat {
         background: rgba(0, 200, 255, 0.07);
@@ -85,11 +92,12 @@
 
     .table-wrap {
         max-width: 1400px; margin: 14px auto 40px; padding: 0 16px;
-        overflow-x: auto;
+        /* 不使用 overflow-x, 否则 sticky 表头失效; 表格超宽时 body 横向滚动 */
     }
     table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1500px; }
     thead th {
-        z-index: 10;
+        position: sticky; /* top 由 JS 动态设置 (header + toolbar 高度) */
+        z-index: 80;
         background: rgba(16, 28, 56, 0.97);
         border: 1px solid rgba(0, 200, 255, 0.2);
         padding: 10px 6px; font-size: 12px; color: #7fd8ff; white-space: nowrap;
@@ -136,6 +144,20 @@
     }
     .toast.show { display: block; animation: ddIn 0.25s ease; }
     @keyframes ddIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+    /* 返回顶部按钮 */
+    .to-top {
+        position: fixed; right: 22px; bottom: 30px;
+        width: 46px; height: 46px; border-radius: 50%;
+        border: 1px solid rgba(0, 200, 255, 0.5);
+        background: rgba(10, 18, 40, 0.92);
+        color: #7fd8ff; font-size: 22px; cursor: pointer; line-height: 1;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45), 0 0 14px rgba(0, 200, 255, 0.25);
+        opacity: 0; visibility: hidden; transform: translateY(14px);
+        transition: all 0.3s ease; z-index: 500;
+    }
+    .to-top.show { opacity: 1; visibility: visible; transform: none; }
+    .to-top:hover { background: rgba(0, 200, 255, 0.22); box-shadow: 0 0 20px rgba(0, 200, 255, 0.55); }
     .tip { max-width: 1400px; margin: 0 auto 10px; padding: 0 16px; font-size: 11px; color: #5f6d96; }
     .tip b { color: #7fd8ff; }
 
@@ -199,6 +221,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<button class="to-top" id="toTop" title="返回顶部">↑</button>
 
 <script src="data/units.js"></script>
 <script>
@@ -371,6 +394,26 @@
     document.getElementById('fBd').addEventListener('change', render);
     document.getElementById('fSt').addEventListener('change', render);
     document.getElementById('fQ').addEventListener('input', render);
+
+    // 吸顶锁定: header + 工具栏 + 表头 一直显示 (动态精确计算, 防错位)
+    function fixSticky() {
+        const hh = document.querySelector('.header').offsetHeight;
+        const tb = document.querySelector('.toolbar').offsetHeight;
+        const total = hh + tb;
+        document.querySelectorAll('thead th').forEach(th => { th.style.top = total + 'px'; });
+        document.querySelector('.toolbar').style.top = hh + 'px';
+    }
+    fixSticky();
+    window.addEventListener('load', fixSticky);
+    window.addEventListener('resize', fixSticky);
+
+    // 返回顶部按钮
+    const toTop = document.getElementById('toTop');
+    window.addEventListener('scroll', () => {
+        toTop.classList.toggle('show', window.scrollY > 400);
+    }, { passive: true });
+    toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
     load();
 </script>
 </body>
