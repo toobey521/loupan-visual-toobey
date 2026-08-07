@@ -292,8 +292,31 @@
     }
     buildScene();
 
+    // ---------- 穿梭路径: 楼栋间自动避障 (沿楼群空隙从南穿到北) ----------
+    var shuttlePath = buildShuttlePath();
+    function buildShuttlePath() {
+        var path = [];
+        var x = 50;
+        for (var z = 90; z >= 10; z -= 3) {
+            var bestX = x, bestPen = 1e9;
+            for (var cand = 8; cand <= 92; cand += 2) {
+                var blocked = false;
+                buildings.forEach(function (b) {
+                    if (Math.abs(b.z - z) < b.d / 2 + 2.2 && Math.abs(b.x - cand) < b.w / 2 + 1.8) blocked = true;
+                });
+                if (!blocked) {
+                    var pen = Math.abs(cand - x);
+                    if (pen < bestPen) { bestPen = pen; bestX = cand; }
+                }
+            }
+            path.push({ x: bestX, z: z });
+            x = bestX;
+        }
+        return path;
+    }
+
     // ---------- 无人机自动巡航 ----------
-    var MODES = ['推拉', '盘旋', '环绕'];
+    var MODES = ['推拉', '盘旋', '环绕', '穿梭'];
     var modeIdx = 0;
     var cruiseT = 0;
     var MODE_DUR = 14;      // 每模式 14 秒
@@ -319,11 +342,26 @@
             var r2 = 75;
             pos.set(center.x + Math.cos(a) * r2, 48 + Math.sin(a * 0.5) * 14, center.z + Math.sin(a) * r2);
             look.set(center.x, 10, center.z);
-        } else {
+        } else if (mode === '环绕') {
             // 环绕低空: 半径 42, 贴地环绕
             var r3 = 42;
             pos.set(center.x + Math.cos(a) * r3, 14 + Math.sin(a * 2) * 5, center.z + Math.sin(a) * r3);
             look.set(center.x, 10, center.z);
+        } else if (mode === '穿梭') {
+            // 楼栋间穿梭: 沿预计算避障路径从南到北穿行 (低空街道层)
+            var pathLen = shuttlePath.length;
+            if (pathLen > 1) {
+                var idx = Math.min(pathLen - 2, (t * (pathLen - 1)) | 0);
+                var p = shuttlePath[idx], p2 = shuttlePath[idx + 1];
+                var frac = t * (pathLen - 1) - idx;
+                var sx = p.x + (p2.x - p.x) * frac;
+                var sz = p.z + (p2.z - p.z) * frac;
+                pos.set(sx, 14 + Math.sin(t * Math.PI * 3) * 1.4, sz);
+                look.set(sx + (p2.x - p.x) * 3, 10, sz - 9);
+            } else {
+                pos.set(50, 14, 60);
+                look.set(50, 10, 20);
+            }
         }
         camera.position.lerp(pos, 1 - Math.pow(0.001, dt));
         controls.target.lerp(look, 1 - Math.pow(0.001, dt));
@@ -452,16 +490,20 @@
         window.__hlMarker = { x: x, y: y, z: z }; // 调试/验证用
     }
 
-    // 镜头路线: 当前相机位置 → 贝塞尔弧线 → 目标户正前方近距
+    // 镜头路线: 当前相机位置 → 贝塞尔弧线 → 目标户正前方近距 (高空越顶, 不穿透楼栋)
     var camAnim = null;
     function startCamRoute(endPos, lookPos) {
         var p0 = camera.position.clone();
+        // 中间控制点抬到所有楼栋之上, 弧线从空中越过楼顶再俯冲到目标户
+        var maxH = 0;
+        buildings.forEach(function (b) { if (b.h > maxH) maxH = b.h; });
+        var midY = Math.max(p0.y, endPos.y, maxH + 6);
         var mid = new THREE.Vector3(
             (p0.x + endPos.x) / 2,
-            Math.max(p0.y, endPos.y) + Math.max(5, Math.abs(p0.y - endPos.y) * 0.25),
+            midY,
             (p0.z + endPos.z) / 2
         );
-        camAnim = { p0: p0, mid: mid, p1: endPos, look: lookPos, t: 0, dur: 2.2 };
+        camAnim = { p0: p0, mid: mid, p1: endPos, look: lookPos, t: 0, dur: 2.8 };
     }
 
     // 定位到具体房号
