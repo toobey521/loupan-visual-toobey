@@ -489,24 +489,41 @@
         #view3d { width: 100%; height: 380px; display: block; background: #060b18; }
         @media (max-width: 600px) { #view3d { height: 300px; } }
         .view3d-hint { text-align: center; color: #5f6d96; font-size: 11px; padding: 8px; }
-        .view3d-prompt { padding: 12px 14px 14px; border-top: 1px solid rgba(0, 200, 255, 0.15); }
-        .prompt-head {
-            display: flex; align-items: center; justify-content: space-between;
-            gap: 8px; font-size: 12px; color: #8a93b8; margin-bottom: 8px;
+
+        /* 楼栋/房号 下拉菜单 */
+        .dd { position: relative; }
+        .dd-btn {
+            min-width: 96px;
+            padding: 9px 12px; border-radius: 2px;
+            background: rgba(8, 16, 36, 0.9);
+            border: 1px solid rgba(0, 200, 255, 0.4);
+            color: #dfe8ff; font-size: 13px; cursor: pointer;
+            text-align: left; white-space: nowrap;
+            transition: all 0.25s;
+            clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
         }
-        .prompt-head button {
-            padding: 5px 12px; border-radius: 6px; border: none; cursor: pointer;
-            background: rgba(0, 200, 255, 0.15); border: 1px solid rgba(0, 200, 255, 0.35);
-            color: #7fd8ff; font-size: 11px; white-space: nowrap;
+        .dd-btn:hover:not(:disabled) { border-color: #00c8ff; box-shadow: 0 0 14px rgba(0, 200, 255, 0.35); }
+        .dd-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .dd-list {
+            display: none;
+            position: absolute; top: calc(100% + 6px); left: 0; z-index: 120;
+            min-width: 150px; max-height: 240px; overflow-y: auto;
+            background: rgba(8, 14, 32, 0.97);
+            border: 1px solid rgba(0, 200, 255, 0.35);
+            border-radius: 2px;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 200, 255, 0.12);
+            backdrop-filter: blur(8px);
         }
-        .prompt-head button:hover { background: rgba(0, 200, 255, 0.3); }
-        #prompt3d {
-            background: rgba(6, 12, 28, 0.8); border: 1px solid rgba(0, 200, 255, 0.12);
-            border-radius: 8px; padding: 10px 12px;
-            color: #9fb4dd; font-size: 11px; line-height: 1.7;
-            white-space: pre-wrap; word-break: break-all;
-            max-height: 140px; overflow-y: auto;
+        .dd-list.open { display: block; animation: ddIn 0.18s ease; }
+        @keyframes ddIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+        .dd-item {
+            padding: 9px 14px; font-size: 13px; color: #cfe0ff; cursor: pointer;
+            transition: all 0.15s; white-space: nowrap;
+            border-left: 3px solid transparent;
         }
+        .dd-item:hover { background: rgba(0, 200, 255, 0.16); color: #fff; }
+        .dd-item.sel { background: rgba(0, 200, 255, 0.22); border-left-color: #00c8ff; color: #fff; }
+        .dd-item.shop-dd { color: #ffd77a; }
         #view3d.loading { opacity: 0.4; }
 
         /* 自定义滚动条（科技感，与整体风格一致） */
@@ -539,11 +556,18 @@
 
     <div class="section" id="sec3d">
         <div class="section-title">🛸 楼盘 3D 实景巡航</div>
-        <div class="section-sub">无人机视角自动巡航 · 点击模式切换 · 拖拽旋转 · 滚轮缩放 · 输入房号直达房源</div>
+        <div class="section-sub">无人机视角自动巡航 · 点击模式切换 · 拖拽旋转 · 滚轮缩放 · 下拉选择楼栋与房号直达房源</div>
         <div class="view3d-card">
             <div class="view3d-toolbar">
                 <div class="view3d-search">
-                    <input id="roomSearch" type="search" placeholder="输入房号定位房源，如 1602" autocomplete="off">
+                    <div class="dd" id="bdDD">
+                        <button class="dd-btn" id="bdBtn" onclick="toggleDD('bd')">楼栋 ▾</button>
+                        <div class="dd-list" id="bdList"></div>
+                    </div>
+                    <div class="dd" id="rmDD">
+                        <button class="dd-btn" id="rmBtn" onclick="toggleDD('rm')" disabled>房号 ▾</button>
+                        <div class="dd-list" id="rmList"></div>
+                    </div>
                     <button id="roomGo">🎯 定位</button>
                     <a id="roomDetail" href="#" target="_blank" style="display:none">查看房源详情 →</a>
                 </div>
@@ -551,12 +575,6 @@
             </div>
             <canvas id="view3d"></canvas>
             <div class="view3d-hint">🖱 拖拽旋转 · 滚轮缩放 · 自动巡航中（点击右上模式可切换推拉 / 盘旋 / 环绕）</div>
-            <div class="view3d-prompt">
-                <div class="prompt-head">📋 楼盘 3D 宣传大片 AI 提示词（根据户型与总平图定制）
-                    <button onclick="copyPrompt3D()">复制提示词</button>
-                </div>
-                <pre id="prompt3d">Ultra-photorealistic 3D architectural visualization of TIANHE NO.1 (天河·壹号), an exclusive low-density luxury estate by Tubey International: master-planned site with 25 buildings precisely laid out per the official site plan — five rows of mid-rise residential towers (each tower 11-20 floors, 2-5 units per floor, 168㎡-288㎡ layouts: 乐山/乐水/拾雅/云庭/观云) arranged in a symmetric garden grid with tree-lined boulevards between rows, surrounded by a perimeter ring road; every tower facade shows its exact unit count per floor as glowing window grids — each window corresponds to a real sellable unit (e.g. unit 1602 on the 16th floor of Tower 1, unit 101/201 on the ground level of shop S2), ground-floor boutique shops with golden signage along the south street; central landscaped courtyard with fountain and reflecting pool, children's playground, sunken plaza, waterscape walkway; camera: cinematic drone flythrough at golden hour — dolly through the grand entrance gate, low-level glide along the boulevard revealing each tower's facade window grids, orbit the central fountain at 45-degree elevation, then ascend to a 270-degree panoramic reveal over the rooftops; volumetric god rays, subtle lens flare, gentle haze, 8K architectural photography, no text, no watermark, masterpiece quality</pre>
-            </div>
         </div>
     </div>
 
@@ -773,14 +791,6 @@
 
         // 暴露给 3D 巡航模块
         window.BUILDINGS_HOTSPOTS = buildings_hotspots;
-        window.copyPrompt3D = function () {
-            const t = document.getElementById('prompt3d').textContent;
-            const btn = document.querySelector('.prompt-head button');
-            const done = () => { btn.textContent = '✅ 已复制'; setTimeout(() => { btn.textContent = '复制提示词'; }, 1800); };
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(t).then(done).catch(() => {});
-            }
-        };
     </script>
 
     <!-- 3D 实景巡航引擎 -->
