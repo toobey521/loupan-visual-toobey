@@ -640,11 +640,13 @@
         const buildings = ["1#", "2#", "3#", "5#", "6#", "7#", "8#", "9#", "10#", "11#", "12#", "13#", "15#", "16#", "17#", "18#", "19#", "20#", "13商铺#", "18商铺#", "19商铺#", "20商铺#", "S2#", "S3商铺#", "S4商铺#"];
 
         function renderBuildingGrid() {
+            // 楼栋显示名映射
+            const bname = b => ({ 'S3商铺#': 'S3', 'S4商铺#': 'S4', '13商铺#': '13商', '18商铺#': '18商', '19商铺#': '19商', '20商铺#': '20商' })[b] || String(b).replace('#', '');
             const isShop = b => b.includes('商铺') || b.startsWith('S');
             document.getElementById('buildingGrid').innerHTML = buildings.map(b => {
                 const cls = isShop(b) ? 'building-chip shop' : 'building-chip';
                 return `<a class="${cls}" href="sales_control_v2.html" target="_blank" title="${b}">
-                    ${b}
+                    ${bname(b)}
                 </a>`;
             }).join('');
             // 入场 stagger
