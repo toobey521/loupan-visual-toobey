@@ -383,6 +383,13 @@
             if (c) c.resize();
         });
     });
+
+    // 数据管理页保存后 (localStorage 变化), 本看板自动刷新同步最新数据
+    window.addEventListener('storage', e => {
+        if (e.key === 'loupan_units_v1' || e.key === null) {
+            location.reload();
+        }
+    });
 </script>
 </body>
 </html>
