@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6609 6375" style="background:#faf8f5;font-family:'Microsoft YaHei',sans-serif;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 649 520" style="background:#faf8f5;font-family:'Microsoft YaHei',sans-serif;">
     <defs>
         <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
             <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#f0e8d8" stroke-width="0.5"/>
         </pattern>
     </defs>
     <rect width="6609" height="6375" fill="url(#grid)"/>
-    <text x="20" y="35" font-size="20" font-weight="700" fill="#6b5435">襄河·1号 · 拾雅 246㎡</text>
+    <text x="20" y="35" font-size="20" font-weight="700" fill="#6b5435">天河·壹号 · 拾雅 246㎡</text>
     <text x="20" y="60" font-size="13" fill="#999">4室2厅3卫 · 一层一户 · L型阳台 · 3.4米层高</text>
     <rect x="0" y="70" width="81" height="174" fill="#ffe8d8" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
     <text x="40.5" y="160.66666666666666" font-size="11" fill="#5a4830" text-anchor="middle">主卧</text>
@@ -37,5 +37,5 @@
     <text x="541.5" y="348.1666666666667" font-size="11" fill="#5a4830" text-anchor="middle">客厅</text>
     <rect x="474" y="70" width="135" height="174" fill="#d4f1d4" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
     <text x="541.5" y="160.66666666666666" font-size="11" fill="#5a4830" text-anchor="middle">空中花园</text>
-    <text x="3304.5" y="6360" font-size="11" fill="#bbb" text-anchor="middle">（简化示意图，以售楼处公示为准）</text>
+    <text x="324" y="490" font-size="11" fill="#bbb" text-anchor="middle">（简化示意图，以售楼处公示为准）</text>
 </svg>
