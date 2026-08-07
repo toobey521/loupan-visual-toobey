@@ -441,6 +441,31 @@
         }
         .footer b { color: #7fd8ff; }
 
+        /* 顶部导航 (右上角三按钮) */
+        .top-nav {
+            position: sticky; top: 0; z-index: 300;
+            display: flex; justify-content: flex-end; align-items: center;
+            gap: 10px; padding: 10px 16px;
+            background: rgba(8, 13, 28, 0.88);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 200, 255, 0.22);
+        }
+        .top-btn {
+            color: #9fd8ff; text-decoration: none; font-size: 13px; font-weight: 600;
+            border: 1px solid rgba(0, 200, 255, 0.4);
+            padding: 8px 16px; border-radius: 2px;
+            background: rgba(0, 200, 255, 0.08);
+            clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+            transition: all 0.25s;
+            white-space: nowrap;
+        }
+        .top-btn:hover { background: rgba(0, 200, 255, 0.22); box-shadow: 0 0 14px rgba(0, 200, 255, 0.45); transform: translateY(-1px); }
+        @media (max-width: 600px) {
+            .top-nav { padding: 8px 10px; gap: 6px; }
+            .top-btn { font-size: 12px; padding: 7px 10px; }
+        }
+
         /* 入场动画 */
         @keyframes cardIn {
             from { opacity: 0; transform: translateY(16px); }
@@ -549,6 +574,11 @@
     </style>
 </head>
 <body>
+    <div class="top-nav">
+        <a href="sales_control_v2.html" class="top-btn">📊 销控情况</a>
+        <a href="analysis.html" class="top-btn">📈 分析看板</a>
+        <a href="data_editor.html" class="top-btn">📝 数据管理</a>
+    </div>
     <div class="hero">
         <div class="brand">TIANHE NO.1</div>
         <h1>天河·壹号</h1>
