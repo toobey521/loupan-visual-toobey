@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>楼盘可视化-Toobey · 演示楼盘:天河·壹号</title>
     <style>
+        @font-face {
+            font-family: 'MaShanZheng';
+            src: url('fonts/MaShanZheng-Regular.ttf') format('truetype');
+            font-display: swap;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
@@ -43,12 +48,21 @@
             color: #7fd8ff;
         }
         .hero h1 {
-            font-size: 38px;
-            font-weight: 700;
-            letter-spacing: 6px;
+            font-size: 56px;
+            font-weight: 400;
+            letter-spacing: 10px;
             margin-bottom: 8px;
-            font-family: 'STSong', '宋体', serif;
-            text-shadow: 0 0 20px rgba(0, 200, 255, 0.5), 0 0 40px rgba(123, 104, 238, 0.35);
+            font-family: 'MaShanZheng', 'STKaiti', '楷体', serif;
+            background: linear-gradient(180deg, #fff8e6 0%, #ffd77a 45%, #c8933a 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 18px rgba(255, 200, 80, 0.45)) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
+            animation: heroFloat 4s ease-in-out infinite;
+        }
+        @keyframes heroFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
         }
         .hero .tag {
             display: inline-block;
@@ -425,6 +439,75 @@
             from { opacity: 0; transform: translateY(16px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* ===== 3D 实景巡航模块 ===== */
+        .view3d-card {
+            background: rgba(10, 18, 40, 0.8);
+            border: 1px solid rgba(0, 200, 255, 0.25);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 200, 255, 0.1);
+        }
+        .view3d-toolbar {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 10px; flex-wrap: wrap;
+            padding: 12px 14px;
+            background: rgba(0, 200, 255, 0.06);
+            border-bottom: 1px solid rgba(0, 200, 255, 0.2);
+        }
+        .view3d-search { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 220px; }
+        .view3d-search input {
+            flex: 1; padding: 9px 14px; border-radius: 8px;
+            background: rgba(8, 16, 36, 0.9);
+            border: 1px solid rgba(0, 200, 255, 0.4);
+            color: #dfe8ff; font-size: 14px; outline: none;
+            transition: all 0.25s;
+        }
+        .view3d-search input:focus { border-color: #00c8ff; box-shadow: 0 0 14px rgba(0, 200, 255, 0.35); }
+        .view3d-search button {
+            padding: 9px 16px; border-radius: 8px; border: none; cursor: pointer;
+            background: linear-gradient(135deg, #00a8e8, #7b68ee);
+            color: #fff; font-size: 13px; font-weight: 600;
+            transition: all 0.25s; white-space: nowrap;
+        }
+        .view3d-search button:hover { box-shadow: 0 0 18px rgba(0, 200, 255, 0.55); transform: translateY(-1px); }
+        .view3d-search a {
+            padding: 9px 14px; border-radius: 8px; text-decoration: none;
+            background: rgba(255, 215, 122, 0.12);
+            border: 1px solid rgba(255, 215, 122, 0.5);
+            color: #ffd77a; font-size: 13px; font-weight: 600;
+            animation: hlPulse 1.6s ease-in-out infinite;
+        }
+        .view3d-mode {
+            padding: 7px 14px; border-radius: 20px; cursor: pointer;
+            background: rgba(0, 200, 255, 0.1);
+            border: 1px solid rgba(0, 200, 255, 0.4);
+            color: #7fd8ff; font-size: 12px; white-space: nowrap;
+            transition: all 0.25s;
+        }
+        .view3d-mode:hover { background: rgba(0, 200, 255, 0.25); box-shadow: 0 0 14px rgba(0, 200, 255, 0.4); }
+        #view3d { width: 100%; height: 380px; display: block; background: #060b18; }
+        @media (max-width: 600px) { #view3d { height: 300px; } }
+        .view3d-hint { text-align: center; color: #5f6d96; font-size: 11px; padding: 8px; }
+        .view3d-prompt { padding: 12px 14px 14px; border-top: 1px solid rgba(0, 200, 255, 0.15); }
+        .prompt-head {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 8px; font-size: 12px; color: #8a93b8; margin-bottom: 8px;
+        }
+        .prompt-head button {
+            padding: 5px 12px; border-radius: 6px; border: none; cursor: pointer;
+            background: rgba(0, 200, 255, 0.15); border: 1px solid rgba(0, 200, 255, 0.35);
+            color: #7fd8ff; font-size: 11px; white-space: nowrap;
+        }
+        .prompt-head button:hover { background: rgba(0, 200, 255, 0.3); }
+        #prompt3d {
+            background: rgba(6, 12, 28, 0.8); border: 1px solid rgba(0, 200, 255, 0.12);
+            border-radius: 8px; padding: 10px 12px;
+            color: #9fb4dd; font-size: 11px; line-height: 1.7;
+            white-space: pre-wrap; word-break: break-all;
+            max-height: 140px; overflow-y: auto;
+        }
+        #view3d.loading { opacity: 0.4; }
     </style>
 </head>
 <body>
@@ -438,6 +521,29 @@
     <div class="section">
         <div class="section-title">楼盘总览</div>
         <div class="overview" id="overview"></div>
+    </div>
+
+    <div class="section" id="sec3d">
+        <div class="section-title">🛸 楼盘 3D 实景巡航</div>
+        <div class="section-sub">无人机视角自动巡航 · 点击模式切换 · 拖拽旋转 · 滚轮缩放 · 输入房号直达房源</div>
+        <div class="view3d-card">
+            <div class="view3d-toolbar">
+                <div class="view3d-search">
+                    <input id="roomSearch" type="search" placeholder="输入房号定位房源，如 1602" autocomplete="off">
+                    <button id="roomGo">🎯 定位</button>
+                    <a id="roomDetail" href="#" target="_blank" style="display:none">查看房源详情 →</a>
+                </div>
+                <div class="view3d-mode" id="modeTag">巡航模式: 推拉</div>
+            </div>
+            <canvas id="view3d"></canvas>
+            <div class="view3d-hint">🖱 拖拽旋转 · 滚轮缩放 · 自动巡航中（点击右上模式可切换推拉 / 盘旋 / 环绕）</div>
+            <div class="view3d-prompt">
+                <div class="prompt-head">📋 楼盘 3D 宣传大片 AI 提示词（根据户型与总平图定制）
+                    <button onclick="copyPrompt3D()">复制提示词</button>
+                </div>
+                <pre id="prompt3d">Ultra-photorealistic cinematic drone aerials of TIANHE NO.1 (天河·壹号), an exclusive low-density luxury estate by Tubey International, at golden hour: sweeping orbit reveals 25 elegantly designed mid-rise residential towers and boutique street-level shops arranged in a master-planned garden layout around a central landscaped courtyard with water features, tree-lined winding paths, children's playground and sunken plaza; towers feature warm beige stone facades with large balconies (168㎡-288㎡ sky residences), glass railings catching golden sunlight, rooftop sky gardens; camera performs smooth dolly-in through the entrance gate, low-level follow around the garden fountain, then rises to a 270-degree circle reveal over the rooftops, soft volumetric god rays, subtle lens flare, gentle haze, 8K architectural visualization, no text, no watermark, cinematic color grade, masterpiece quality</pre>
+            </div>
+        </div>
     </div>
 
     <div class="section">
@@ -524,7 +630,7 @@
             document.getElementById('buildingGrid').innerHTML = buildings.map(b => {
                 const cls = isShop(b) ? 'building-chip shop' : 'building-chip';
                 return `<a class="${cls}" href="sales_control_v2.html" target="_blank" title="${b}">
-                    ${b}<small>查看销控</small>
+                    ${b}
                 </a>`;
             }).join('');
             // 入场 stagger
@@ -638,48 +744,32 @@
             {id:'20商铺#',label:'20商铺#',x:23.5,y:9.0, w:3.5,h:3.5,shop:true},
         ];
 
-        // 网格轨道匹配: 预定义不重叠网格点, 按作者坐标就近匹配, 冲突顺延
-        function resolveOverlaps(items) {
-            const gridX = [4, 11, 18, 25, 32, 39, 46, 53, 60];
-            const gridY = [3, 13, 23, 33, 43];
-            const slots = [];
-            for (const gy of gridY) for (const gx of gridX) slots.push({ x: gx, y: gy, used: false });
-            const placed = [];
-            // 按作者坐标从左上到右下处理, 保证先占位的保持意图
-            const sorted = [...items].sort((a, b) => (a.y - b.y) || (a.x - b.x));
-            for (const it of sorted) {
-                // 计算到每个空槽的距离
-                const free = slots.filter(s => !s.used);
-                free.sort((p, q) =>
-                    ((p.x - it.x) ** 2 + (p.y - it.y) ** 2) - ((q.x - it.x) ** 2 + (q.y - it.y) ** 2));
-                const slot = free[0];
-                slot.used = true;
-                placed.push({ ...it, x: slot.x, y: slot.y });
-            }
-            return placed;
-        }
-
         function renderPlanHotspots() {
+            // 总平图楼栋热点标签已按用户要求移除（保留调用，如需恢复启用 resolveOverlaps 逻辑）
             const wrap = document.getElementById('planHotspots');
-            if (!wrap) return;
-            const items = buildings_hotspots.map(b => ({
-                id: b.id, label: b.label, shop: !!b.shop,
-                x: b.x, y: b.y,
-                w: b.shop ? 5.2 : 5.6,
-                h: b.shop ? 6 : 7.5,
-            }));
-            const placed = resolveOverlaps(items);
-            wrap.innerHTML = placed.map(b => `
-                <a class="hs${b.shop ? ' shop' : ''}" href="sales_control_v2.html?b=${encodeURIComponent(b.id)}" title="${b.id}"
-                   style="left:${b.x}%;top:${b.y}%;width:${b.w}%;height:${b.h}%;">
-                    <span class="hs-label">${b.label.replace('<br>', ' ')}</span>
-                </a>`).join('');
+            if (wrap) wrap.innerHTML = '';
         }
 
         renderOverview();
         renderBuildingGrid();
         renderLayouts();
         renderPlanHotspots();
+
+        // 暴露给 3D 巡航模块
+        window.BUILDINGS_HOTSPOTS = buildings_hotspots;
+        window.copyPrompt3D = function () {
+            const t = document.getElementById('prompt3d').textContent;
+            const btn = document.querySelector('.prompt-head button');
+            const done = () => { btn.textContent = '✅ 已复制'; setTimeout(() => { btn.textContent = '复制提示词'; }, 1800); };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(t).then(done).catch(() => {});
+            }
+        };
     </script>
+
+    <!-- 3D 实景巡航引擎 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="js/view3d.js"></script>
 </body>
 </html>
