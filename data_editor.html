@@ -89,7 +89,6 @@
     }
     table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1500px; }
     thead th {
-        position: sticky; /* top 由 JS 动态设置为 header 高度 */
         z-index: 10;
         background: rgba(16, 28, 56, 0.97);
         border: 1px solid rgba(0, 200, 255, 0.2);
@@ -119,6 +118,7 @@
         color: #dfe8ff; font-size: 12px; text-align: center; outline: none; cursor: pointer;
     }
     .st { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .bname-cell { padding: 6px 4px; color: #9fd8ff; font-weight: 600; text-align: center; }
     .st-unsold { background: rgba(139, 147, 184, 0.2); color: #9aa3c0; }
     .st-sub { background: rgba(251, 191, 36, 0.18); color: #ffb347; }
     .st-sold { background: rgba(74, 222, 128, 0.18); color: #4ade80; }
@@ -206,6 +206,12 @@
     let data = [];
     let rows = [];
 
+    // 楼栋显示名映射（与销控页完全一致）
+    function bname(b) {
+        const m = { 'S3商铺#': 'S3', 'S4商铺#': 'S4', '13商铺#': '13商', '18商铺#': '18商', '19商铺#': '19商', '20商铺#': '20商' };
+        return m[b] || String(b).replace('#', '');
+    }
+
     function load() {
         // units.js 已自动优先 localStorage; 此处再兜底
         let saved = null;
@@ -219,7 +225,7 @@
         const bds = [...new Set(data.map(d => d.building))].sort((a, b) =>
             (parseInt(a.replace(/[^0-9]/g, '')) || 999) - (parseInt(b.replace(/[^0-9]/g, '')) || 999));
         document.getElementById('fBd').innerHTML = '<option value="">全部楼栋</option>' +
-            bds.map(b => `<option value="${b}">${b}</option>`).join('');
+            bds.map(b => `<option value="${b}">${bname(b)}</option>`).join('');
     }
 
     function getStatus(d) {
@@ -251,8 +257,8 @@
             const tr = document.createElement('tr');
             tr.className = st;
             tr.innerHTML = `
-                <td><input type="text" value="${esc(d.building)}" data-k="building"></td>
-                <td><input type="text" value="${esc(d.room)}" data-k="room"></td>
+                <td><div class="bname-cell">${esc(bname(d.building))}</div></td>
+                <td><input type="text" value="${esc(String(d.room).replace(/^商/, ''))}" data-k="room"></td>
                 <td><select data-k="status">
                     <option value="unsold" ${st === 'unsold' ? 'selected' : ''}>待售</option>
                     <option value="sub" ${st === 'sub' ? 'selected' : ''}>认购</option>
@@ -365,15 +371,6 @@
     document.getElementById('fBd').addEventListener('change', render);
     document.getElementById('fSt').addEventListener('change', render);
     document.getElementById('fQ').addEventListener('input', render);
-
-    // 表头吸顶位置动态跟随 header 高度 (避免错位)
-    function fixSticky() {
-        const h = document.querySelector('.header').offsetHeight;
-        document.querySelectorAll('thead th').forEach(th => { th.style.top = h + 'px'; });
-    }
-    fixSticky();
-    window.addEventListener('resize', fixSticky);
-    window.addEventListener('load', fixSticky);
     load();
 </script>
 </body>
