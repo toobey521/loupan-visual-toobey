@@ -553,7 +553,8 @@
             const wrap = document.getElementById('planHotspots');
             if (!wrap) return;
             wrap.innerHTML = buildings_hotspots.map(b => `
-                <a class="hs${b.shop ? ' shop' : ''}" href="sales_control_v2.html?b=${encodeURIComponent(b.id)}" title="${b.id}">
+                <a class="hs${b.shop ? ' shop' : ''}" href="sales_control_v2.html?b=${encodeURIComponent(b.id)}" title="${b.id}"
+                   style="left:${b.x}%;top:${b.y}%;width:${b.w}%;height:${b.h}%;">
                     <span class="hs-label">${b.label}</span>
                 </a>`).join('');
         }
