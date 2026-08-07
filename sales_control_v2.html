@@ -22,6 +22,13 @@
             z-index: 100;
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
+        .back-home {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: rgba(255,255,255,0.9); text-decoration: none; font-size: 13px;
+            border: 1px solid rgba(255,255,255,0.45); padding: 7px 14px; border-radius: 20px;
+            transition: all 0.2s; background: rgba(0,0,0,0.18); white-space: nowrap;
+        }
+        .back-home:hover { background: rgba(255,255,255,0.2); }
         .header h1 { font-size: 22px; font-weight: 600; margin-bottom: 10px; }
         .header .stats {
             display: flex;
@@ -262,6 +269,7 @@
 </head>
 <body>
     <div class="header">
+        <a href="index.html" class="back-home" title="返回主页">← 返回主页</a>
         <h1>🏠 楼盘销控可视化-Toobey <span class="demo-tag">演示数据</span></h1>
         <div class="stats">
             <span class="stat">总 <b id="totalCount">437</b> 套</span>
@@ -457,20 +465,21 @@
             }
             document.getElementById('mDeal').innerHTML = dealHtml;
 
-            // 户型图纸: layout "188㎡" → floorplans/188.svg
+            // 户型图纸: layout "188㎡" → floorplans/188.svg?v=2 (版本参数破缓存)
             const fp = document.getElementById('mFloorplan');
+            const FP_VER = 'v=2';
             const m = /(\d+(?:\.\d+)?)\s*㎡/.exec(d.layout);
             if (m) {
                 const num = m[1];
                 const img = new Image();
-                img.onload = () => { fp.innerHTML = `<img src="floorplans/${num}.svg" alt="${d.layout} 户型图">`; };
+                img.onload = () => { fp.innerHTML = `<img src="floorplans/${num}.svg?${FP_VER}" alt="${d.layout} 户型图">`; };
                 img.onerror = () => {
                     const img2 = new Image();
-                    img2.onload = () => { fp.innerHTML = `<img src="floorplans/${num}.jpg" alt="${d.layout} 户型图">`; };
+                    img2.onload = () => { fp.innerHTML = `<img src="floorplans/${num}.jpg?${FP_VER}" alt="${d.layout} 户型图">`; };
                     img2.onerror = () => { fp.innerHTML = `<div class="missing">该户型图纸待补充<br><small>请将图纸保存为 floorplans/${num}.svg</small></div>`; };
-                    img2.src = `floorplans/${num}.jpg`;
+                    img2.src = `floorplans/${num}.jpg?${FP_VER}`;
                 };
-                img.src = `floorplans/${num}.svg`;
+                img.src = `floorplans/${num}.svg?${FP_VER}`;
             } else {
                 fp.innerHTML = `<div class="missing">${d.type}暂无户型图纸</div>`;
             }
