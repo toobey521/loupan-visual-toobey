@@ -275,27 +275,33 @@
         }
         .layout-cover {
             background: linear-gradient(135deg, rgba(0, 200, 255, 0.1) 0%, rgba(123, 104, 238, 0.08) 100%);
-            padding: 18px;
+            padding: 20px 18px 16px;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 14px;
+            justify-content: center;
+            gap: 4px;
+            text-align: center;
             border-bottom: 1px solid rgba(0, 200, 255, 0.15);
         }
         .layout-name {
-            font-size: 22px;
-            font-weight: 700;
-            color: #e8ecff;
+            font-size: 14px;
+            font-weight: 600;
+            color: #9fb4dd;
+            letter-spacing: 4px;
             font-family: 'STSong', '宋体', serif;
-            text-shadow: 0 0 12px rgba(0, 200, 255, 0.3);
         }
         .layout-area {
-            font-size: 28px;
-            font-weight: 700;
-            color: #7fd8ff;
+            font-size: 34px;
+            font-weight: 800;
+            color: #ffd77a;
+            text-shadow: 0 0 18px rgba(255, 215, 122, 0.45);
+            letter-spacing: 1px;
+            white-space: nowrap;
         }
         .layout-area sup {
-            font-size: 14px;
-            opacity: 0.7;
+            font-size: 17px;
+            opacity: 0.8;
             margin-left: 2px;
         }
         .layout-img {
@@ -546,7 +552,7 @@
         <div class="brand">TIANHE NO.1</div>
         <h1>天河·壹号</h1>
         <div class="tag">承袭风雅 筑城标杆</div>
-        <div class="sub">图贝国际 · 城心低密豪宅</div>
+        <div class="sub">TOOBEY · 城心低密豪宅</div>
     </div>
 
     <div class="section">
@@ -596,7 +602,7 @@
     </div>
 
     <div class="footer">
-        天河·壹号 · 图贝国际<br>
+        天河·壹号 · TOOBEY<br>
         本页面房源信息以售楼处现场公示为准
     </div>
 
@@ -683,8 +689,8 @@
                 return `
                 <a class="layout-card" onclick="openLayout('${key}', '${l.name}'); return false;">
                     <div class="layout-cover">
+                        <div class="layout-area">${l.area}<sup>㎡</sup> · 户型鉴赏</div>
                         <div class="layout-name">${l.name}</div>
-                        <div class="layout-area">${l.area}<sup>㎡</sup></div>
                     </div>
                     <img class="layout-img" id="img-${key}" alt="${l.name} ${l.area}㎡">
                     <div class="layout-body">
