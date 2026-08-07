@@ -302,7 +302,7 @@
         return bid;
     }
 
-    // 选择楼栋 → 填充房号 + 镜头飞向楼栋
+    // 选择楼栋 → 填充房号 (巡航保持转动, 不打断)
     function pickBuilding(el) {
         selB = el.dataset.b;
         selR = null;
@@ -319,16 +319,15 @@
         document.getElementById('rmList').innerHTML = rooms.map(function (u) {
             return '<div class="dd-item" data-r="' + u.room + '" onclick="pickRoom(this)">' + u.room.replace(/^商/, '') + '</div>';
         }).join('');
-        flyToBuilding(selB);
         document.getElementById('modeTag').textContent = '已选楼栋: ' + bname(selB) + '（' + rooms.length + ' 套）';
     }
 
-    // 选择房号 → 定位到该户（镜头对准楼层 + 窗户高亮）
+    // 选择房号 → 仅记录 (巡航保持转动, 点击定位按钮后执行镜头路线)
     function pickRoom(el) {
         selR = el.dataset.r;
         document.getElementById('rmBtn').textContent = selR.replace(/^商/, '') + ' ▾';
         closeDD();
-        locateRoom(selB, selR);
+        document.getElementById('modeTag').textContent = '已选: ' + bname(selB) + '-' + selR.replace(/^商/, '') + '（点击 🎯 定位）';
     }
 
     // 镜头飞向整栋楼
@@ -395,6 +394,18 @@
         window.__hlMarker = { x: x, y: y, z: z }; // 调试/验证用
     }
 
+    // 镜头路线: 当前相机位置 → 贝塞尔弧线 → 目标户正前方近距
+    var camAnim = null;
+    function startCamRoute(endPos, lookPos) {
+        var p0 = camera.position.clone();
+        var mid = new THREE.Vector3(
+            (p0.x + endPos.x) / 2,
+            Math.max(p0.y, endPos.y) + Math.max(5, Math.abs(p0.y - endPos.y) * 0.25),
+            (p0.z + endPos.z) / 2
+        );
+        camAnim = { p0: p0, mid: mid, p1: endPos, look: lookPos, t: 0, dur: 2.2 };
+    }
+
     // 定位到具体房号
     function locateRoom(bid, room) {
         var rb = resolveBuilding(bid);
@@ -406,7 +417,7 @@
         // buildingMap 以 HOTSPOTS id 建图(S3#), UNITS building 可能是 S3商铺# → 优先用传入的 bid
         var bd = buildingMap[bid] || buildingMap[u.building];
         if (!bd) return;
-        locating = true; cruisePaused = 60;
+        locating = true; cruisePaused = 7;   // 镜头路线期间暂停巡航, 结束后恢复转动
         // 目标户窗户 3D 位置
         var first = String(u.room).split('/')[0];   // 商铺复式房号 "101/201" 取第一段
         var n = parseInt(first.replace(/[^0-9]/g, ''), 10) || 0;
@@ -417,9 +428,8 @@
         var winY = (floor - 1) * 3.1 + 1.7;
         var winZ = bd.z + bd.d / 2 + 0.2;
         showHlMarker(winX, winY, winZ);
-        var dist = Math.max(bd.h * 0.85, 13);
-        targetCam = new THREE.Vector3(winX + dist, winY + dist * 0.45, winZ + dist * 0.55);
-        targetLook = new THREE.Vector3(winX, winY, winZ);
+        // 镜头路线: 从当前巡航位置弧线拉进到该户窗户正前方很近处
+        startCamRoute(new THREE.Vector3(winX, winY + 0.4, winZ + 6.2), new THREE.Vector3(winX, winY, winZ));
         var roomLabel = bname(u.building) + '-' + u.room.replace(/^商/, '');
         document.getElementById('modeTag').textContent = '已定位: ' + roomLabel + ' (' + u.layout + ')';
         var det = document.getElementById('roomDetail');
@@ -441,7 +451,7 @@
 
     document.getElementById('roomGo').addEventListener('click', function () {
         if (selB && selR) locateRoom(selB, selR);
-        else if (selB) flyToBuilding(selB);
+        else document.getElementById('modeTag').textContent = '请先选择楼栋与房号';
     });
 
     window.pickBuilding = pickBuilding;
@@ -449,9 +459,8 @@
     window.toggleDD = toggleDD;
     fillBuildings();
 
-    // 用户拖拽/缩放 → 暂停巡航 8 秒
-    controls.addEventListener('start', function () { cruisePaused = 8; });
-    controls.addEventListener('change', function () { if (locating) { locating = false; } });
+    // 用户拖拽/缩放 → 打断镜头路线, 暂停巡航 8 秒
+    controls.addEventListener('start', function () { camAnim = null; locating = false; cruisePaused = 8; });
 
     // ---------- 模式切换 ----------
     function nextMode() {
@@ -471,23 +480,32 @@
         var dt = Math.min((now - lastT) / 1000, 0.05);
         lastT = now;
 
-        if (locating && targetCam) {
-            camera.position.lerp(targetCam, 1 - Math.pow(0.001, dt));
-            controls.target.lerp(targetLook, 1 - Math.pow(0.001, dt));
-            if (camera.position.distanceTo(targetCam) < 0.6) locating = false;
+        // 镜头路线 (贝塞尔): 巡航位 → 弧线 → 目标户正前方
+        if (camAnim) {
+            camAnim.t += dt / camAnim.dur;
+            var done = camAnim.t >= 1;
+            var t = done ? 1 : camAnim.t, u = 1 - t;
+            camera.position.set(
+                u * u * camAnim.p0.x + 2 * u * t * camAnim.mid.x + t * t * camAnim.p1.x,
+                u * u * camAnim.p0.y + 2 * u * t * camAnim.mid.y + t * t * camAnim.p1.y,
+                u * u * camAnim.p0.z + 2 * u * t * camAnim.mid.z + t * t * camAnim.p1.z
+            );
+            controls.target.lerp(camAnim.look, 0.12);
+            if (done) { camAnim = null; locating = false; }
         } else if (cruisePaused <= 0) {
             cruise(dt);
         }
-        // 目标户星光标记: 旋转 + 闪烁
+        // 目标户星光标记: 旋转 + 闪烁, 屏幕恒定大小 (近大远不小)
         if (hlMarker && hlMarker.visible) {
-            var pulse = Math.sin(now * 0.007);
-            var sBase = 4.2 * (1 + pulse * 0.22);
+            var dist = camera.position.distanceTo(hlMarker.position);
+            var sBase = Math.max(1.6, dist * 0.14) * (1 + Math.sin(now * 0.007) * 0.22);
             hlMarker.scale.set(sBase, sBase, 1);
             hlMarker.material.opacity = 0.6 + Math.sin(now * 0.009) * 0.35;
             hlMarker.material.rotation = now * 0.0012;
         }
         controls.update();
         renderer.render(scene, camera);
+        window.__camPos = { x: camera.position.x, y: camera.position.y, z: camera.position.z }; // 调试
     }
     requestAnimationFrame(animate);
 
