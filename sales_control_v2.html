@@ -435,7 +435,7 @@
                 const totalPrice = d.dealTotal > 0 ? d.dealTotal : d.total;
                 
                 return `<div class="room-card ${status}" data-b="${d.building}" data-r="${d.room}" style="animation-delay:${Math.min(idx, 14) * 0.04}s">
-                    <div class="room-number">${d.room}</div>
+                    <div class="room-number">${d.building.replace('#', '')}-${d.room.replace(/^商/, '')}</div>
                     <div class="room-info">${d.layout} · ${d.area.toFixed(1)}㎡</div>
                     <div class="room-price-row">
                         <div class="room-price-item">
@@ -483,7 +483,7 @@
             if (!d) return;
             const status = getStatus(d);
             const statusText = getStatusText(d);
-            document.getElementById('mTitle').innerHTML = `${d.building} ${d.room} <span class="room-status status-${status === 'sold' ? 'signed' : status}">${statusText}</span>`;
+            document.getElementById('mTitle').innerHTML = `${d.building.replace('#', '')}-${d.room.replace(/^商/, '')} <span class="room-status status-${status === 'sold' ? 'signed' : status}">${statusText}</span>`;
             const unitPrice = d.dealPrice > 0 ? d.dealPrice : d.price;
             const totalPrice = d.dealTotal > 0 ? d.dealTotal : d.total;
             document.getElementById('mInfo').innerHTML =
