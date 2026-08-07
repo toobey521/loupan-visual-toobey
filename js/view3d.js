@@ -10,6 +10,12 @@
     var UNITS = window.UNITS || [];
     var HOTSPOTS = window.BUILDINGS_HOTSPOTS || [];
 
+    // 楼栋显示名映射（数据值 → 展示名）
+    function bname(b) {
+        var m = { 'S3商铺#': 'S3', 'S4商铺#': 'S4', '13商铺#': '13商', '18商铺#': '18商', '19商铺#': '19商', '20商铺#': '20商' };
+        return m[b] || String(b).replace('#', '');
+    }
+
     // ---------- 场景 ----------
     var scene = new THREE.Scene();
     scene.background = new THREE.Color(0x060b18);
@@ -165,7 +171,7 @@
             sctx.font = 'bold 52px Microsoft YaHei, sans-serif';
             sctx.textAlign = 'center';
             sctx.textBaseline = 'middle';
-            sctx.fillText(b.id, 128, 52);
+            sctx.fillText(bname(b.id), 128, 52);
             var spr = new THREE.Sprite(new THREE.SpriteMaterial({
                 map: new THREE.CanvasTexture(sc), transparent: true, depthTest: false
             }));
@@ -225,13 +231,13 @@
     function locateRoom() {
         var raw = document.getElementById('roomSearch').value.trim();
         if (!raw) return;
-        // 支持两种输入: "1602" 或 "1-1602"
+        // 支持两种输入: "1602" 或 "1-1602" / "13商-101"
         var qRoom = raw, qB = null;
         if (raw.indexOf('-') > 0) { qB = raw.slice(0, raw.indexOf('-')); qRoom = raw.slice(raw.indexOf('-') + 1); }
         var u = null;
         for (var i = 0; i < UNITS.length; i++) {
             if (String(UNITS[i].room) === qRoom) {
-                if (!qB || UNITS[i].building === qB || UNITS[i].building.replace('#', '') === qB) { u = UNITS[i]; break; }
+                if (!qB || UNITS[i].building === qB || UNITS[i].building.replace('#', '') === qB || bname(UNITS[i].building) === qB) { u = UNITS[i]; break; }
             }
         }
         if (!u) {
@@ -245,7 +251,7 @@
         var dist = Math.max(bd.h * 1.6, 16);
         targetCam = new THREE.Vector3(bd.x + dist, bd.h * 0.55, bd.z + dist * 0.7);
         targetLook = new THREE.Vector3(bd.x, bd.h * 0.35, bd.z);
-        var roomLabel = u.building.replace('#', '') + '-' + u.room.replace(/^商/, '');
+        var roomLabel = bname(u.building) + '-' + u.room.replace(/^商/, '');
         document.getElementById('modeTag').textContent = '已定位: ' + roomLabel + ' (' + u.layout + ')';
         var det = document.getElementById('roomDetail');
         det.style.display = 'inline-flex';
