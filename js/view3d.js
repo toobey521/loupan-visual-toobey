@@ -60,13 +60,15 @@
         new THREE.MeshStandardMaterial({ color: 0x0c1730, roughness: 0.95, metalness: 0 })
     );
     ground.rotation.x = -Math.PI / 2;
+    // 地面平移到楼栋区域 (0~100), 楼栋 12~88 完全落在内部
+    ground.position.set(GROUND / 2, 0, GROUND / 2);
     ground.receiveShadow = true;
     scene.add(ground);
 
     var grid = new THREE.GridHelper(GROUND, 20, 0x00c8ff, 0x16335c);
     grid.material.opacity = 0.4;
     grid.material.transparent = true;
-    grid.position.y = 0.2;
+    grid.position.set(GROUND / 2, 0.2, GROUND / 2);
     scene.add(grid);
 
     // ---------- 楼栋 ----------
