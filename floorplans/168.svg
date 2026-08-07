@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6411 6283" style="background:#faf8f5;font-family:'Microsoft YaHei',sans-serif;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 451 428" style="background:#faf8f5;font-family:'Microsoft YaHei',sans-serif;">
     <defs>
         <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
             <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#f0e8d8" stroke-width="0.5"/>
         </pattern>
     </defs>
     <rect width="6411" height="6283" fill="url(#grid)"/>
-    <text x="20" y="35" font-size="20" font-weight="700" fill="#6b5435">襄河·1号 · 乐山 168㎡</text>
+    <text x="20" y="35" font-size="20" font-weight="700" fill="#6b5435">天河·壹号 · 乐山 168㎡</text>
     <text x="20" y="60" font-size="13" fill="#999">4室2厅3卫 · 南北双阳台 · 8.1米至宽景观阳台</text>
     <rect x="0" y="70" width="84" height="178" fill="#fde2dc" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
     <text x="42.0" y="162.66666666666666" font-size="11" fill="#5a4830" text-anchor="middle">次卧</text>
@@ -39,5 +39,5 @@
     <text x="370.5" y="126.16666666666667" font-size="11" fill="#5a4830" text-anchor="middle">玄关</text>
     <rect x="330" y="248" width="81" height="105" fill="#f0e8d8" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
     <text x="370.5" y="304.1666666666667" font-size="11" fill="#5a4830" text-anchor="middle">衣帽间</text>
-    <text x="3205.5" y="6268" font-size="11" fill="#bbb" text-anchor="middle">（简化示意图，以售楼处公示为准）</text>
+    <text x="226" y="398" font-size="11" fill="#bbb" text-anchor="middle">（简化示意图，以售楼处公示为准）</text>
 </svg>
