@@ -526,6 +526,9 @@
         modeIdx = (modeIdx + 1) % MODES.length;
         document.getElementById('modeTag').textContent = '巡航模式: ' + MODES[modeIdx];
         cruiseT = 0;
+        cruisePaused = 0;   // 点击模式按钮 → 立即恢复巡航转动
+        camAnim = null;     // 打断进行中的镜头路线
+        locating = false;
     }
     document.getElementById('modeTag').addEventListener('click', nextMode);
     setInterval(function () {
