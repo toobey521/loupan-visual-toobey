@@ -519,7 +519,8 @@
         .view3d-mode:hover { background: rgba(0, 200, 255, 0.25); box-shadow: 0 0 14px rgba(0, 200, 255, 0.4); }
         #view3d { width: 100%; height: 380px; display: block; background: #060b18; }
         @media (max-width: 600px) { #view3d { height: 300px; } }
-        .view3d-hint { text-align: center; color: #5f6d96; font-size: 11px; padding: 8px; }
+        .view3d-hint { text-align: center; color: #5f6d96; font-size: 11px; padding: 10px; }
+        .view3d-hint b { color: #7fd8ff; font-weight: 600; }
 
         /* 楼栋/房号 下拉菜单 */
         .dd { position: relative; }
@@ -570,6 +571,32 @@
         }
         ::-webkit-scrollbar-corner { background: transparent; }
         * { scrollbar-width: thin; scrollbar-color: rgba(0, 200, 255, 0.5) rgba(8, 14, 32, 0.6); }
+
+        /* ===== 手机端整合 (≤640px) ===== */
+        @media (max-width: 640px) {
+            .hero { padding: 34px 14px 28px; }
+            .hero h1 { font-size: 40px; letter-spacing: 6px; }
+            .hero .brand { font-size: 12px; letter-spacing: 6px; }
+            .hero .tag { font-size: 12px; }
+            .hero .sub { font-size: 11px; }
+            .hero-btns .top-btn { font-size: 12px; padding: 7px 12px; }
+            .section { padding: 0 12px 28px; }
+            .section-title { font-size: 20px; }
+            .overview { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .kpi { padding: 12px 8px; }
+            .kpi .num { font-size: 21px; }
+            .view3d-toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+            .view3d-search { width: 100%; flex-wrap: wrap; }
+            .view3d-search .dd { flex: 1; min-width: 100px; }
+            .view3d-search .btn { flex: 0 0 auto; }
+            #roomDetail { width: 100%; justify-content: center; }
+            .building-grid { grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: 6px; }
+            .building-chip { padding: 10px 4px; font-size: 13px; }
+            .layout-grid { grid-template-columns: 1fr; }
+            .plan-img-wrap { padding: 8px; }
+            .footer { font-size: 10px; padding: 24px 12px 32px; }
+            .dd-list { max-height: 200px; }
+        }
     </style>
 </head>
 <body>
@@ -610,7 +637,7 @@
                 <div class="view3d-mode" id="modeTag">巡航模式: 推拉</div>
             </div>
             <canvas id="view3d"></canvas>
-            <div class="view3d-hint">🖱 拖拽旋转 · 滚轮缩放 · 自动巡航中（点击右上模式可切换推拉 / 盘旋 / 环绕）</div>
+            <div class="view3d-hint">🖱 拖拽旋转 · 滚轮缩放 · <b>F 全屏</b> · <b>Esc 退出</b> · 自动巡航中</div>
         </div>
     </div>
 
@@ -828,6 +855,18 @@
 
         // 暴露给 3D 巡航模块
         window.BUILDINGS_HOTSPOTS = buildings_hotspots;
+
+        // F 全屏 / Esc 退出全屏
+        document.addEventListener('keydown', e => {
+            if (e.key === 'f' || e.key === 'F') {
+                if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                }
+            }
+            if (e.key === 'Escape' && document.fullscreenElement && document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            }
+        });
     </script>
 
     <!-- 3D 实景巡航引擎 -->
