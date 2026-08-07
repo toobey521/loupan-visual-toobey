@@ -16,6 +16,10 @@
         return m[b] || String(b).replace('#', '');
     }
 
+    // 楼盘 3D 宣传大片提示词（仅用于生成 3D 效果图，页面不展示）
+    var PROMPT_3D = 'Ultra-photorealistic 3D architectural visualization of TIANHE NO.1 (天河·壹号), an exclusive low-density luxury estate by Tubey International: master-planned site with 25 buildings precisely laid out per the official site plan — five rows of mid-rise residential towers (each tower 11-20 floors, 2-5 units per floor, 168㎡-288㎡ layouts: 乐山/乐水/拾雅/云庭/观云) arranged in a symmetric garden grid with tree-lined boulevards between rows, surrounded by a perimeter ring road; every tower facade shows its exact unit count per floor as glowing window grids — each window corresponds to a real sellable unit (e.g. unit 1602 on the 16th floor of Tower 1, unit 101/201 on the ground level of shop S2), ground-floor boutique shops with golden signage along the south street; central landscaped courtyard with fountain and reflecting pool, children\'s playground, sunken plaza, waterscape walkway; camera: cinematic drone flythrough at golden hour — dolly through the grand entrance gate, low-level glide along the boulevard revealing each tower\'s facade window grids, orbit the central fountain at 45-degree elevation, then ascend to a 270-degree panoramic reveal over the rooftops; volumetric god rays, subtle lens flare, gentle haze, 8K architectural photography, no text, no watermark, masterpiece quality';
+    window.__PROMPT_3D = PROMPT_3D;
+
     // ---------- 场景 ----------
     var scene = new THREE.Scene();
     scene.background = new THREE.Color(0x060b18);
@@ -122,19 +126,24 @@
 
     function buildScene() {
         var src = HOTSPOTS.length ? HOTSPOTS : [];
-        // 3D 布局: 按原坐标排序分 5 行 5 列网格化 (保证分散不重叠 + 保持上下/左右相对方位)
-        var sorted = src.slice().sort(function (a, b) { return (a.y - b.y) || (a.x - b.x); });
-        var COLS = 5;
-        sorted.forEach(function (b, idx) {
-            var row = Math.floor(idx / COLS), col = idx % COLS;
-            var x = 12 + col * 17;      // 12 ~ 80
-            var z = 12 + row * 16.5;    // 12 ~ 78
-            var w = 7 + (b.w || 5) * 0.35;          // 住宅 ~8.5, 商铺 ~8
-            var d = (b.h || 7) * 0.8;               // 住宅长条 ~11-13.6, 商铺 ~3
+        // 布局: 使用作者总平图坐标 (buildings_hotspots 的 x/y/w/h 对应总平图真实位置),
+        // 线性拉伸到整个场景分散开, 楼栋尺寸保持小比例避免互相覆盖
+        var xs = src.map(function (b) { return b.x; });
+        var ys = src.map(function (b) { return b.y; });
+        var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
+        var minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
+        var spanX = (maxX - minX) || 1, spanY = (maxY - minY) || 1;
+        function mapX(v) { return 12 + (v - minX) / spanX * 76; }  // 12 ~ 88
+        function mapY(v) { return 12 + (v - minY) / spanY * 74; }  // 12 ~ 86
+        src.forEach(function (b) {
+            var x = mapX(b.x + (b.w || 5) / 2);
+            var z = mapY(b.y + (b.h || 7) / 2);
+            var w = Math.max(4.5, (b.w || 5) * 1.15);   // 保持总平图上的楼栋宽比例
+            var d = Math.max(4.5, (b.h || 7) * 0.5);    // 长条高度转为进深, 半系数防重叠
             var floors = floorCountOf(b.id);
             var h = Math.max(6, floors * 3.1);
             var shop = !!b.shop;
-            if (shop) { w = 7.5; d = 6; }
+            if (shop) { w = Math.max(5, w); d = 4.5; }
 
             var geo = new THREE.BoxGeometry(w, h, d);
             var cols = shop ? 4 : unitsPerFloorOf(b.id);   // 每层户数 = 窗户列数 (窗户对应真实房屋)
@@ -179,7 +188,7 @@
             spr.position.set(x, h + 4.5, z);
             scene.add(spr);
 
-            var bd = { id: b.id, mesh: mesh, x: x, z: z, h: h, shop: shop, label: spr };
+            var bd = { id: b.id, mesh: mesh, x: x, z: z, w: w, d: d, h: h, shop: shop, label: spr };
             buildings.push(bd);
             buildingMap[b.id] = bd;
         });
@@ -224,33 +233,108 @@
         controls.target.lerp(look, 1 - Math.pow(0.001, dt));
     }
 
-    // ---------- 房号定位 ----------
+    // ---------- 下拉菜单检索 + 房号定位 ----------
     var locating = false;
     var targetCam = null, targetLook = null;
+    var selB = null, selR = null;        // 当前选中的 楼栋(数据名)/房号
+    var hlMarker = null;                 // 目标户窗户高亮标记
 
-    function locateRoom() {
-        var raw = document.getElementById('roomSearch').value.trim();
-        if (!raw) return;
-        // 支持两种输入: "1602" 或 "1-1602" / "13商-101"
-        var qRoom = raw, qB = null;
-        if (raw.indexOf('-') > 0) { qB = raw.slice(0, raw.indexOf('-')); qRoom = raw.slice(raw.indexOf('-') + 1); }
+    // 填充楼栋下拉（按总平图热点顺序）
+    function fillBuildings() {
+        var list = document.getElementById('bdList');
+        list.innerHTML = HOTSPOTS.map(function (b) {
+            var shop = !!b.shop;
+            return '<div class="dd-item' + (shop ? ' shop-dd' : '') + '" data-b="' + b.id + '" onclick="pickBuilding(this)">' + bname(b.id) + '</div>';
+        }).join('');
+    }
+
+    // 选择楼栋 → 填充房号 + 镜头飞向楼栋
+    function pickBuilding(el) {
+        selB = el.dataset.b;
+        selR = null;
+        document.getElementById('bdBtn').textContent = bname(selB) + ' ▾';
+        var rmBtn = document.getElementById('rmBtn');
+        rmBtn.disabled = false;
+        rmBtn.textContent = '房号 ▾';
+        closeDD();
+        hideDetail();
+        // 房号列表（按楼层/户号排序）
+        var rooms = UNITS.filter(function (u) { return u.building === selB; })
+            .sort(function (a, b) { return String(a.room).localeCompare(String(b.room), 'zh'); });
+        document.getElementById('rmList').innerHTML = rooms.map(function (u) {
+            return '<div class="dd-item" data-r="' + u.room + '" onclick="pickRoom(this)">' + u.room.replace(/^商/, '') + '</div>';
+        }).join('');
+        flyToBuilding(selB);
+        document.getElementById('modeTag').textContent = '已选楼栋: ' + bname(selB);
+    }
+
+    // 选择房号 → 定位到该户（镜头对准楼层 + 窗户高亮）
+    function pickRoom(el) {
+        selR = el.dataset.r;
+        document.getElementById('rmBtn').textContent = selR.replace(/^商/, '') + ' ▾';
+        closeDD();
+        locateRoom(selB, selR);
+    }
+
+    // 镜头飞向整栋楼
+    function flyToBuilding(bid) {
+        var bd = buildingMap[bid];
+        if (!bd) return;
+        locating = true; cruisePaused = 60;
+        var dist = Math.max(bd.h * 1.9, 20);
+        targetCam = new THREE.Vector3(bd.x + dist, bd.h * 0.5, bd.z + dist * 0.7);
+        targetLook = new THREE.Vector3(bd.x, bd.h * 0.3, bd.z);
+    }
+
+    // 该户在其楼层内的序号（决定窗户列）
+    function unitIndexInFloor(u) {
+        var n = parseInt(String(u.room).replace(/[^0-9]/g, ''), 10);
+        var floor = Math.floor(n / 100) || 1;
+        var same = UNITS.filter(function (x) {
+            if (x.building !== u.building) return false;
+            var xn = parseInt(String(x.room).replace(/[^0-9]/g, ''), 10);
+            return (Math.floor(xn / 100) || 1) === floor;
+        }).sort(function (a, b) { return String(a.room).localeCompare(String(b.room), 'zh'); });
+        for (var i = 0; i < same.length; i++) if (same[i].room === u.room) return i;
+        return 0;
+    }
+
+    // 目标户窗户高亮标记（金色发光方块）
+    function showHlMarker(x, y, z) {
+        if (!hlMarker) {
+            hlMarker = new THREE.Mesh(
+                new THREE.PlaneGeometry(1.7, 2.3),
+                new THREE.MeshBasicMaterial({ color: 0xffd77a, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthTest: false })
+            );
+            scene.add(hlMarker);
+        }
+        hlMarker.position.set(x, y, z);
+        hlMarker.visible = true;
+        window.__hlMarker = { x: x, y: y, z: z }; // 调试/验证用
+    }
+
+    // 定位到具体房号
+    function locateRoom(bid, room) {
         var u = null;
         for (var i = 0; i < UNITS.length; i++) {
-            if (String(UNITS[i].room) === qRoom) {
-                if (!qB || UNITS[i].building === qB || UNITS[i].building.replace('#', '') === qB || bname(UNITS[i].building) === qB) { u = UNITS[i]; break; }
-            }
+            if (UNITS[i].building === bid && String(UNITS[i].room) === room) { u = UNITS[i]; break; }
         }
-        if (!u) {
-            document.getElementById('modeTag').textContent = '未找到房号 ' + raw;
-            return;
-        }
+        if (!u) { document.getElementById('modeTag').textContent = '未找到该房号'; return; }
         var bd = buildingMap[u.building];
         if (!bd) return;
-        locating = true;
-        cruisePaused = 60;
-        var dist = Math.max(bd.h * 1.6, 16);
-        targetCam = new THREE.Vector3(bd.x + dist, bd.h * 0.55, bd.z + dist * 0.7);
-        targetLook = new THREE.Vector3(bd.x, bd.h * 0.35, bd.z);
+        locating = true; cruisePaused = 60;
+        // 目标户窗户 3D 位置
+        var n = parseInt(String(u.room).replace(/[^0-9]/g, ''), 10);
+        var floor = Math.floor(n / 100) || 1;
+        var unitIdx = unitIndexInFloor(u);
+        var cols = Math.max(1, unitsPerFloorOf(bd.id));
+        var winX = bd.x - bd.w / 2 + (unitIdx + 0.5) * (bd.w / cols);
+        var winY = (floor - 1) * 3.1 + 1.7;
+        var winZ = bd.z + bd.d / 2 + 0.2;
+        showHlMarker(winX, winY, winZ);
+        var dist = Math.max(bd.h * 0.85, 13);
+        targetCam = new THREE.Vector3(winX + dist, winY + dist * 0.45, winZ + dist * 0.55);
+        targetLook = new THREE.Vector3(winX, winY, winZ);
         var roomLabel = bname(u.building) + '-' + u.room.replace(/^商/, '');
         document.getElementById('modeTag').textContent = '已定位: ' + roomLabel + ' (' + u.layout + ')';
         var det = document.getElementById('roomDetail');
@@ -259,10 +343,26 @@
         det.textContent = '查看 ' + roomLabel + ' 详情 →';
     }
 
-    document.getElementById('roomGo').addEventListener('click', locateRoom);
-    document.getElementById('roomSearch').addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') locateRoom();
+    function hideDetail() { document.getElementById('roomDetail').style.display = 'none'; }
+
+    // 下拉开关 / 关闭
+    function toggleDD(which) {
+        var list = document.getElementById(which === 'bd' ? 'bdList' : 'rmList');
+        document.querySelectorAll('.dd-list').forEach(function (l) { if (l !== list) l.classList.remove('open'); });
+        list.classList.toggle('open');
+    }
+    function closeDD() { document.querySelectorAll('.dd-list').forEach(function (l) { l.classList.remove('open'); }); }
+    document.addEventListener('click', function (e) { if (!e.target.closest('.dd')) closeDD(); });
+
+    document.getElementById('roomGo').addEventListener('click', function () {
+        if (selB && selR) locateRoom(selB, selR);
+        else if (selB) flyToBuilding(selB);
     });
+
+    window.pickBuilding = pickBuilding;
+    window.pickRoom = pickRoom;
+    window.toggleDD = toggleDD;
+    fillBuildings();
 
     // 用户拖拽/缩放 → 暂停巡航 8 秒
     controls.addEventListener('start', function () { cruisePaused = 8; });
@@ -292,6 +392,12 @@
             if (camera.position.distanceTo(targetCam) < 0.6) locating = false;
         } else if (cruisePaused <= 0) {
             cruise(dt);
+        }
+        // 目标户窗户高亮脉动
+        if (hlMarker && hlMarker.visible) {
+            var pulse = Math.sin(now * 0.006);
+            hlMarker.scale.set(1 + pulse * 0.15, 1 + pulse * 0.15, 1);
+            hlMarker.material.opacity = 0.55 + Math.sin(now * 0.008) * 0.3;
         }
         controls.update();
         renderer.render(scene, camera);
