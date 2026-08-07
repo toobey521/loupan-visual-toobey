@@ -96,14 +96,19 @@
 
     function buildScene() {
         var src = HOTSPOTS.length ? HOTSPOTS : [];
-        src.forEach(function (b) {
-            var w = (b.w || 5) * 1.6;
-            var d = (b.h || 7) * 1.6;
-            var x = (b.x + (b.w || 5) / 2) * 1.15;
-            var z = (b.y + (b.h || 7) / 2) * 1.15;
+        // 3D 布局: 按原坐标排序分 5 行 5 列网格化 (保证分散不重叠 + 保持上下/左右相对方位)
+        var sorted = src.slice().sort(function (a, b) { return (a.y - b.y) || (a.x - b.x); });
+        var COLS = 5;
+        sorted.forEach(function (b, idx) {
+            var row = Math.floor(idx / COLS), col = idx % COLS;
+            var x = 12 + col * 17;      // 12 ~ 80
+            var z = 12 + row * 16.5;    // 12 ~ 78
+            var w = 7 + (b.w || 5) * 0.35;          // 住宅 ~8.5, 商铺 ~8
+            var d = (b.h || 7) * 0.8;               // 住宅长条 ~11-13.6, 商铺 ~3
             var floors = floorCountOf(b.id);
             var h = Math.max(6, floors * 3.1);
             var shop = !!b.shop;
+            if (shop) { w = 7.5; d = 6; }
 
             var geo = new THREE.BoxGeometry(w, h, d);
             var mat = new THREE.MeshStandardMaterial({
@@ -151,6 +156,7 @@
             buildings.push(bd);
             buildingMap[b.id] = bd;
         });
+        window.__buildings = buildings; // 调试/验证用
     }
     buildScene();
 
@@ -196,14 +202,19 @@
     var targetCam = null, targetLook = null;
 
     function locateRoom() {
-        var v = document.getElementById('roomSearch').value.trim();
-        if (!v) return;
+        var raw = document.getElementById('roomSearch').value.trim();
+        if (!raw) return;
+        // 支持两种输入: "1602" 或 "1-1602"
+        var qRoom = raw, qB = null;
+        if (raw.indexOf('-') > 0) { qB = raw.slice(0, raw.indexOf('-')); qRoom = raw.slice(raw.indexOf('-') + 1); }
         var u = null;
         for (var i = 0; i < UNITS.length; i++) {
-            if (String(UNITS[i].room) === v) { u = UNITS[i]; break; }
+            if (String(UNITS[i].room) === qRoom) {
+                if (!qB || UNITS[i].building === qB || UNITS[i].building.replace('#', '') === qB) { u = UNITS[i]; break; }
+            }
         }
         if (!u) {
-            document.getElementById('modeTag').textContent = '未找到房号 ' + v;
+            document.getElementById('modeTag').textContent = '未找到房号 ' + raw;
             return;
         }
         var bd = buildingMap[u.building];
@@ -213,11 +224,12 @@
         var dist = Math.max(bd.h * 1.6, 16);
         targetCam = new THREE.Vector3(bd.x + dist, bd.h * 0.55, bd.z + dist * 0.7);
         targetLook = new THREE.Vector3(bd.x, bd.h * 0.35, bd.z);
-        document.getElementById('modeTag').textContent = '已定位: ' + u.building + ' ' + u.room + ' (' + u.layout + ')';
+        var roomLabel = u.building.replace('#', '') + '-' + u.room.replace(/^商/, '');
+        document.getElementById('modeTag').textContent = '已定位: ' + roomLabel + ' (' + u.layout + ')';
         var det = document.getElementById('roomDetail');
         det.style.display = 'inline-flex';
         det.href = 'sales_control_v2.html?b=' + encodeURIComponent(u.building) + '&r=' + encodeURIComponent(u.room);
-        det.textContent = '查看 ' + u.room + ' 详情 →';
+        det.textContent = '查看 ' + roomLabel + ' 详情 →';
     }
 
     document.getElementById('roomGo').addEventListener('click', locateRoom);
