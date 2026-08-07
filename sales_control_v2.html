@@ -14,21 +14,25 @@
         }
         
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background:
+                radial-gradient(ellipse 70% 60% at 50% -30%, rgba(0, 200, 255, 0.22) 0%, transparent 60%),
+                linear-gradient(135deg, #101c3c 0%, #16245c 50%, #1a1040 100%);
             padding: 20px 15px;
             text-align: center;
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border-bottom: 1px solid rgba(0, 200, 255, 0.25);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         }
         .back-home {
             position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-            color: rgba(255,255,255,0.9); text-decoration: none; font-size: 13px;
-            border: 1px solid rgba(255,255,255,0.45); padding: 7px 14px; border-radius: 20px;
-            transition: all 0.2s; background: rgba(0,0,0,0.18); white-space: nowrap;
+            color: #9fd8ff; text-decoration: none; font-size: 13px;
+            border: 1px solid rgba(0, 200, 255, 0.4); padding: 7px 14px; border-radius: 2px;
+            transition: all 0.2s; background: rgba(0, 200, 255, 0.08); white-space: nowrap;
+            clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
         }
-        .back-home:hover { background: rgba(255,255,255,0.2); }
+        .back-home:hover { background: rgba(0, 200, 255, 0.2); box-shadow: 0 0 12px rgba(0, 200, 255, 0.35); }
         .header h1 { font-size: 22px; font-weight: 600; margin-bottom: 10px; }
         .header .stats {
             display: flex;
@@ -37,12 +41,25 @@
             flex-wrap: wrap;
         }
         .header .stat {
-            background: rgba(255,255,255,0.2);
-            padding: 6px 14px;
-            border-radius: 20px;
+            background: rgba(0, 200, 255, 0.07);
+            border: 1px solid rgba(0, 200, 255, 0.25);
+            padding: 7px 14px;
+            border-radius: 2px;
             font-size: 13px;
+            color: #9fb4dd;
+            clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+            transition: all 0.25s;
+            box-shadow: inset 0 0 12px rgba(0, 200, 255, 0.05);
         }
-        .header .stat b { font-weight: 600; }
+        .header .stat b {
+            font-weight: 700;
+            font-size: 15px;
+            text-shadow: 0 0 10px currentColor;
+        }
+        .header .stat:nth-child(1) b { color: #7fd8ff; }
+        .header .stat:nth-child(2) b { color: #ff5d7a; }
+        .header .stat:nth-child(3) b { color: #ffb347; }
+        .header .stat:nth-child(4) b { color: #8a93b8; }
         
         .main-layout { display: flex; align-items: flex-start; }
         .side-nav {
@@ -404,6 +421,12 @@
     <script src="data/units.js"></script>
     <script>
         const allData = window.UNITS;
+
+        // 楼栋显示名映射（数据值 → 展示名）
+        function bname(b) {
+            const m = { 'S3商铺#': 'S3', 'S4商铺#': 'S4', '13商铺#': '13商', '18商铺#': '18商', '19商铺#': '19商', '20商铺#': '20商' };
+            return m[b] || String(b).replace('#', '');
+        }
         
         let currentBuilding = new URLSearchParams(location.search).get('b') || '1#';
         
@@ -427,7 +450,7 @@
             });
             const nav = document.getElementById('sideNav');
             const btns = buildings.map(b => 
-                `<button class="building-btn ${b === currentBuilding ? 'active' : ''}" data-b="${b}" onclick="selectBuilding('${b}')" title="${b}">${b.replace('#', '')}</button>`
+                `<button class="building-btn ${b === currentBuilding ? 'active' : ''}" data-b="${b}" onclick="selectBuilding('${b}')" title="${b}">${bname(b)}</button>`
             ).join('');
             const title = nav.querySelector('.side-nav-title');
             nav.innerHTML = title ? title.outerHTML + btns : btns;
@@ -469,7 +492,7 @@
                 const totalPrice = d.dealTotal > 0 ? d.dealTotal : d.total;
                 
                 return `<div class="room-card ${status}" data-b="${d.building}" data-r="${d.room}" style="animation-delay:${Math.min(idx, 14) * 0.04}s">
-                    <div class="room-number">${d.building.replace('#', '')}-${d.room.replace(/^商/, '')}</div>
+                    <div class="room-number">${bname(d.building)}-${d.room.replace(/^商/, '')}</div>
                     <div class="room-info">${d.layout} · ${d.area.toFixed(1)}㎡</div>
                     <div class="room-price-row">
                         <div class="room-price-item">
@@ -517,7 +540,7 @@
             if (!d) return;
             const status = getStatus(d);
             const statusText = getStatusText(d);
-            document.getElementById('mTitle').innerHTML = `${d.building.replace('#', '')}-${d.room.replace(/^商/, '')} <span class="room-status status-${status === 'sold' ? 'signed' : status}">${statusText}</span>`;
+            document.getElementById('mTitle').innerHTML = `${bname(d.building)}-${d.room.replace(/^商/, '')} <span class="room-status status-${status === 'sold' ? 'signed' : status}">${statusText}</span>`;
             const unitPrice = d.dealPrice > 0 ? d.dealPrice : d.price;
             const totalPrice = d.dealTotal > 0 ? d.dealTotal : d.total;
             document.getElementById('mInfo').innerHTML =
