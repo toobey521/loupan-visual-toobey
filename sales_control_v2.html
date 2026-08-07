@@ -108,6 +108,17 @@
         }
         .side-content { flex: 1; min-width: 0; }
         @media (max-width: 640px) {
+            .header {
+                display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+                gap: 6px; padding: 12px 10px;
+            }
+            .header .back-home {
+                position: static !important; transform: none !important;
+                left: auto !important; right: auto !important;
+                margin: 0 3px; font-size: 12px; padding: 6px 10px;
+            }
+            .header h1 { width: 100%; order: 3; font-size: 17px; margin-bottom: 6px; }
+            .header .stats { width: 100%; order: 4; justify-content: center; flex-wrap: wrap; }
             .side-nav { width: 64px; padding: 8px 5px; }
             .side-nav .building-btn { font-size: 10px; padding: 8px 2px; }
         }
