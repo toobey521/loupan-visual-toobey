@@ -75,6 +75,22 @@
         max-width: 1500px; margin: 14px auto 40px; padding: 0 16px;
         display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 14px;
     }
+    @media (max-width: 640px) {
+        .header {
+            display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+            gap: 8px; padding: 12px 10px;
+        }
+        .header .back-home {
+            position: static !important; transform: none !important;
+            margin: 0 2px; font-size: 12px; padding: 6px 10px;
+        }
+        .header .nav-right {
+            position: static !important; transform: none !important;
+            width: 100%; justify-content: center; order: 3; margin-top: 2px;
+        }
+        .header h1 { width: 100%; order: 2; font-size: 20px; }
+        .header .sub { width: 100%; order: 4; }
+    }
     @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
     .panel {
         background: rgba(14, 24, 50, 0.78);
