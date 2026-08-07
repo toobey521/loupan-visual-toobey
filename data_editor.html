@@ -98,7 +98,7 @@
     thead th {
         position: sticky; /* top 由 JS 动态设置 (header + toolbar 高度) */
         z-index: 80;
-        background: rgba(16, 28, 56, 0.97);
+        background: #101c38;   /* 不透明背景, 避免横向滚动时内容穿透表头 */
         border: 1px solid rgba(0, 200, 255, 0.2);
         padding: 10px 6px; font-size: 12px; color: #7fd8ff; white-space: nowrap;
         text-align: center;
@@ -423,5 +423,6 @@
 
     load();
 </script>
+    <script src="js/fullscreen.js"></script>
 </body>
 </html>
