@@ -299,16 +299,49 @@
         return 0;
     }
 
-    // 目标户窗户高亮标记（金色发光方块）
+    // 目标户窗户高亮标记（闪光星光形象）
+    function makeStarTexture() {
+        var c = document.createElement('canvas');
+        c.width = 160; c.height = 160;
+        var ctx = c.getContext('2d');
+        var cx = 80, cy = 80, R = 66, r = 26;
+        ctx.beginPath();
+        for (var i = 0; i < 10; i++) {
+            var rad = i % 2 === 0 ? R : r;
+            var ang = -Math.PI / 2 + i * Math.PI / 5;
+            var x = cx + rad * Math.cos(ang);
+            var y = cy + rad * Math.sin(ang);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        var g = ctx.createRadialGradient(cx, cy, 4, cx, cy, R);
+        g.addColorStop(0, '#fffdf0');
+        g.addColorStop(0.35, '#ffe9a8');
+        g.addColorStop(0.7, 'rgba(255, 196, 60, 0.85)');
+        g.addColorStop(1, 'rgba(255, 180, 40, 0)');
+        ctx.fillStyle = g;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 240, 190, 0.95)';
+        ctx.lineWidth = 4;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+        // 中心亮点
+        ctx.beginPath();
+        ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+        return new THREE.CanvasTexture(c);
+    }
     function showHlMarker(x, y, z) {
         if (!hlMarker) {
-            hlMarker = new THREE.Mesh(
-                new THREE.PlaneGeometry(1.7, 2.3),
-                new THREE.MeshBasicMaterial({ color: 0xffd77a, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthTest: false })
-            );
+            hlMarker = new THREE.Sprite(new THREE.SpriteMaterial({
+                map: makeStarTexture(), transparent: true, depthTest: false, blending: THREE.AdditiveBlending
+            }));
             scene.add(hlMarker);
         }
         hlMarker.position.set(x, y, z);
+        hlMarker.scale.set(4.2, 4.2, 1);
+        hlMarker.material.opacity = 1;
         hlMarker.visible = true;
         window.__hlMarker = { x: x, y: y, z: z }; // 调试/验证用
     }
@@ -393,11 +426,13 @@
         } else if (cruisePaused <= 0) {
             cruise(dt);
         }
-        // 目标户窗户高亮脉动
+        // 目标户星光标记: 旋转 + 闪烁
         if (hlMarker && hlMarker.visible) {
-            var pulse = Math.sin(now * 0.006);
-            hlMarker.scale.set(1 + pulse * 0.15, 1 + pulse * 0.15, 1);
-            hlMarker.material.opacity = 0.55 + Math.sin(now * 0.008) * 0.3;
+            var pulse = Math.sin(now * 0.007);
+            var sBase = 4.2 * (1 + pulse * 0.22);
+            hlMarker.scale.set(sBase, sBase, 1);
+            hlMarker.material.opacity = 0.6 + Math.sin(now * 0.009) * 0.35;
+            hlMarker.material.rotation = now * 0.0012;
         }
         controls.update();
         renderer.render(scene, camera);
