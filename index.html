@@ -309,7 +309,8 @@
             width: 100%;
             display: block;
             background: #0b1226;
-            aspect-ratio: 1 / 1;   /* 方形区域与 1024x1024 户型图匹配, 无多余黑边 */
+            min-height: 280px;     /* 兜底: 微信X5老内核不认 aspect-ratio, 保证图片有高度 */
+            aspect-ratio: 1 / 1;   /* 新内核方形, 与 1024x1024 户型图匹配 */
             object-fit: contain;
         }
         .layout-img-missing {
