@@ -855,23 +855,12 @@
 
         // 暴露给 3D 巡航模块
         window.BUILDINGS_HOTSPOTS = buildings_hotspots;
-
-        // F 全屏 / Esc 退出全屏
-        document.addEventListener('keydown', e => {
-            if (e.key === 'f' || e.key === 'F') {
-                if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen().catch(() => {});
-                }
-            }
-            if (e.key === 'Escape' && document.fullscreenElement && document.exitFullscreen) {
-                document.exitFullscreen().catch(() => {});
-            }
-        });
     </script>
 
     <!-- 3D 实景巡航引擎 -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="js/view3d.js"></script>
+    <script src="js/fullscreen.js"></script>
 </body>
 </html>
