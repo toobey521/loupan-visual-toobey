@@ -441,15 +441,10 @@
         }
         .footer b { color: #7fd8ff; }
 
-        /* 顶部导航 (右上角三按钮) */
-        .top-nav {
-            position: sticky; top: 0; z-index: 300;
-            display: flex; justify-content: flex-end; align-items: center;
-            gap: 10px; padding: 10px 16px;
-            background: rgba(8, 13, 28, 0.88);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(0, 200, 255, 0.22);
+        /* 天河·壹号 大标题区右侧按钮 (销控情况/分析看板/数据管理) */
+        .hero-btns {
+            position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+            display: flex; flex-direction: column; gap: 10px;
         }
         .top-btn {
             color: #9fd8ff; text-decoration: none; font-size: 13px; font-weight: 600;
@@ -459,11 +454,15 @@
             clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
             transition: all 0.25s;
             white-space: nowrap;
+            text-align: center;
         }
         .top-btn:hover { background: rgba(0, 200, 255, 0.22); box-shadow: 0 0 14px rgba(0, 200, 255, 0.45); transform: translateY(-1px); }
-        @media (max-width: 600px) {
-            .top-nav { padding: 8px 10px; gap: 6px; }
-            .top-btn { font-size: 12px; padding: 7px 10px; }
+        @media (max-width: 900px) {
+            .hero-btns {
+                position: static; transform: none;
+                flex-direction: row; justify-content: center;
+                flex-wrap: wrap; margin-top: 16px; gap: 8px;
+            }
         }
 
         /* 入场动画 */
@@ -574,16 +573,16 @@
     </style>
 </head>
 <body>
-    <div class="top-nav">
-        <a href="sales_control_v2.html" class="top-btn">📊 销控情况</a>
-        <a href="analysis.html" class="top-btn">📈 分析看板</a>
-        <a href="data_editor.html" class="top-btn">📝 数据管理</a>
-    </div>
     <div class="hero">
         <div class="brand">TIANHE NO.1</div>
         <h1>天河·壹号</h1>
         <div class="tag">承袭风雅 筑城标杆</div>
         <div class="sub">TOOBEY · 城心低密豪宅</div>
+        <div class="hero-btns">
+            <a href="sales_control_v2.html" class="top-btn">📊 销控情况</a>
+            <a href="analysis.html" class="top-btn">📈 分析看板</a>
+            <a href="data_editor.html" class="top-btn">📝 数据管理</a>
+        </div>
     </div>
 
     <div class="section">
