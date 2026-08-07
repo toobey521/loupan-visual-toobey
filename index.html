@@ -663,7 +663,7 @@
             const isShop = b => b.includes('商铺') || b.startsWith('S');
             document.getElementById('buildingGrid').innerHTML = buildings.map(b => {
                 const cls = isShop(b) ? 'building-chip shop' : 'building-chip';
-                return `<a class="${cls}" href="sales_control_v2.html" target="_blank" title="${b}">
+                return `<a class="${cls}" href="sales_control_v2.html?b=${encodeURIComponent(b)}" target="_blank" title="${b}">
                     ${bname(b)}
                 </a>`;
             }).join('');
