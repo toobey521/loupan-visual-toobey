@@ -118,39 +118,73 @@
             gap: 10px;
         }
         .room-card {
-            background: rgba(255,255,255,0.08);
-            border-radius: 14px;
+            background: rgba(10, 16, 36, 0.85);
+            border-radius: 2px;
             padding: 14px 12px;
             text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(0, 200, 255, 0.28);
             transition: all 0.3s;
             position: relative;
             overflow: hidden;
+            clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+        }
+        /* 扫描线动效 */
+        .room-card::before {
+            content: '';
+            position: absolute;
+            top: -100%; left: 0; right: 0; height: 40%;
+            background: linear-gradient(180deg, transparent, rgba(0, 200, 255, 0.10), transparent);
+            animation: roomScan 3.2s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes roomScan {
+            0% { top: -40%; }
+            100% { top: 110%; }
         }
         .room-card::after {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 3px;
-            opacity: 0;
-            transition: opacity 0.3s;
+            opacity: 1;
+            transition: all 0.3s;
+            box-shadow: 0 0 12px currentColor;
         }
-        .room-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
-        
+        .room-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(0, 200, 255, 0.7);
+            box-shadow: 0 0 24px rgba(0, 200, 255, 0.35), 0 8px 28px rgba(0, 0, 0, 0.5);
+        }
+
         .room-card.sold {
-            background: linear-gradient(180deg, rgba(74, 222, 128, 0.12) 0%, rgba(74, 222, 128, 0.05) 100%);
-            border-color: rgba(74, 222, 128, 0.25);
+            background: linear-gradient(180deg, rgba(74, 222, 128, 0.14) 0%, rgba(10, 16, 36, 0.9) 100%);
+            border-color: rgba(74, 222, 128, 0.35);
         }
-        .room-card.sold::after { background: #4ade80; opacity: 1; }
-        
+        .room-card.sold::after { background: #4ade80; color: #4ade80; }
+        .room-card.sold:hover { box-shadow: 0 0 26px rgba(74, 222, 128, 0.4), 0 8px 28px rgba(0, 0, 0, 0.5); border-color: rgba(74, 222, 128, 0.7); }
+
         .room-card.subscribed {
-            background: linear-gradient(180deg, rgba(251, 191, 36, 0.12) 0%, rgba(251, 191, 36, 0.05) 100%);
-            border-color: rgba(251, 191, 36, 0.25);
+            background: linear-gradient(180deg, rgba(251, 191, 36, 0.14) 0%, rgba(10, 16, 36, 0.9) 100%);
+            border-color: rgba(251, 191, 36, 0.35);
         }
-        .room-card.subscribed::after { background: #fbbf24; opacity: 1; }
-        
-        .room-card.unsold { background: rgba(255,255,255,0.05); }
-        .room-card.unsold::after { background: #6b7280; opacity: 1; }
+        .room-card.subscribed::after { background: #fbbf24; color: #fbbf24; }
+        .room-card.subscribed:hover { box-shadow: 0 0 26px rgba(251, 191, 36, 0.4), 0 8px 28px rgba(0, 0, 0, 0.5); border-color: rgba(251, 191, 36, 0.7); }
+
+        .room-card.unsold { background: rgba(10, 16, 36, 0.85); }
+        .room-card.unsold::after { background: #5b6b8c; color: #5b6b8c; }
+
+        /* 房号检索高亮 */
+        .room-card.hl {
+            border-color: #ffd77a !important;
+            box-shadow: 0 0 30px rgba(255, 215, 122, 0.55), 0 0 60px rgba(255, 215, 122, 0.2) !important;
+            animation: hlPulse 1.6s ease-in-out infinite;
+            z-index: 30;
+        }
+        .room-card.hl::after { background: #ffd77a; color: #ffd77a; }
+        @keyframes hlPulse {
+            0%, 100% { box-shadow: 0 0 18px rgba(255, 215, 122, 0.4), 0 0 40px rgba(255, 215, 122, 0.12); }
+            50% { box-shadow: 0 0 36px rgba(255, 215, 122, 0.65), 0 0 70px rgba(255, 215, 122, 0.25); }
+        }
         
         .room-number { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
         .room-info { font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
@@ -547,6 +581,18 @@
         });
         // 键盘 Esc 关闭弹窗
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closeRoomModal(); });
+
+        // URL 房号高亮: ?b=1#&r=1602 → 高亮该房号卡片并滚动到可见
+        const hlRoom = new URLSearchParams(location.search).get('r');
+        if (hlRoom) {
+            setTimeout(() => {
+                const card = document.querySelector(`.room-card[data-r="${hlRoom}"]`);
+                if (card) {
+                    card.classList.add('hl');
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 350);
+        }
 
         // 全局统计
         const totalSigned = allData.filter(d => d.signStatus === '已网签').length;
