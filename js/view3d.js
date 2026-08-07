@@ -23,10 +23,10 @@
     // ---------- 场景 ----------
     var scene = new THREE.Scene();
     scene.background = new THREE.Color(0x060b18);
-    scene.fog = new THREE.Fog(0x060b18, 180, 380);
+    scene.fog = new THREE.Fog(0x060b18, 90, 240);
 
     var camera = new THREE.PerspectiveCamera(55, canvas.clientWidth / canvas.clientHeight, 0.5, 600);
-    camera.position.set(70, 55, 95);
+    camera.position.set(48, 46, 78);
 
     var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
     renderer.setSize(canvas.clientWidth, canvas.clientHeight);
@@ -54,16 +54,17 @@
     scene.add(p2);
 
     // ---------- 地面 ----------
+    var GROUND = 100;   // 地面尺寸与楼栋范围匹配 (楼栋映射 12~88 → 居中)
     var ground = new THREE.Mesh(
-        new THREE.PlaneGeometry(300, 300),
-        new THREE.MeshStandardMaterial({ color: 0x0a1428, roughness: 0.95, metalness: 0 })
+        new THREE.PlaneGeometry(GROUND, GROUND),
+        new THREE.MeshStandardMaterial({ color: 0x0c1730, roughness: 0.95, metalness: 0 })
     );
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     scene.add(ground);
 
-    var grid = new THREE.GridHelper(300, 60, 0x00c8ff, 0x123a66);
-    grid.material.opacity = 0.35;
+    var grid = new THREE.GridHelper(GROUND, 20, 0x00c8ff, 0x16335c);
+    grid.material.opacity = 0.4;
     grid.material.transparent = true;
     grid.position.y = 0.2;
     scene.add(grid);
@@ -124,6 +125,36 @@
         var tex = new THREE.CanvasTexture(c);
         tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
         return tex;
+    }
+
+    // 基座(裙楼)纹理: 深色石材 + 商铺橱窗玻璃
+    function makePodiumTexture() {
+        var W = 256, H = 128;
+        var c = document.createElement('canvas');
+        c.width = W; c.height = H;
+        var ctx = c.getContext('2d');
+        ctx.fillStyle = '#2a3148';
+        ctx.fillRect(0, 0, W, H);
+        // 石材纹理噪点
+        for (var i = 0; i < 400; i++) {
+            ctx.fillStyle = 'rgba(255,255,255,' + (Math.random() * 0.06) + ')';
+            ctx.fillRect(Math.random() * W, Math.random() * H, 2, 2);
+        }
+        var n = 4;
+        for (var j = 0; j < n; j++) {
+            var y = j * (H / n) + 5;
+            ctx.fillStyle = 'rgba(120, 200, 240, ' + (0.5 + Math.random() * 0.3) + ')';
+            ctx.fillRect(4, y, W - 8, H / n - 10);
+            ctx.strokeStyle = 'rgba(12, 20, 38, 0.9)';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(4, y, W - 8, H / n - 10);
+            // 橱窗中竖分隔
+            ctx.beginPath();
+            ctx.moveTo(W / 2, y);
+            ctx.lineTo(W / 2, y + H / n - 10);
+            ctx.stroke();
+        }
+        return new THREE.CanvasTexture(c);
     }
 
     function floorCountOf(buildingId) {
@@ -205,6 +236,31 @@
             edge.position.copy(mesh.position);
             scene.add(edge);
 
+            // ===== 造型升级: 基座(裙楼) + 女儿墙 + 屋顶机房 =====
+            // 基座: 商业裙楼视觉 (深色石材 + 橱窗玻璃)
+            var podium = new THREE.Mesh(
+                new THREE.BoxGeometry(w * 1.14, 1.7, d * 1.14),
+                new THREE.MeshStandardMaterial({ map: makePodiumTexture(), roughness: 0.75, metalness: 0.1 })
+            );
+            podium.position.set(x, 0.85, z);
+            podium.castShadow = true;
+            scene.add(podium);
+            // 女儿墙: 楼顶围栏框
+            var parapet = new THREE.Mesh(
+                new THREE.BoxGeometry(w + 0.26, 1.1, d + 0.26),
+                new THREE.MeshStandardMaterial({ color: 0x232c44, roughness: 0.85 })
+            );
+            parapet.position.set(x, h + 0.55, z);
+            scene.add(parapet);
+            // 屋顶机房/设备间
+            var roofBox = new THREE.Mesh(
+                new THREE.BoxGeometry(Math.max(1.6, w * 0.32), 2.4, Math.max(1.6, d * 0.32)),
+                new THREE.MeshStandardMaterial({ color: 0x2a3552, roughness: 0.7, metalness: 0.25 })
+            );
+            roofBox.position.set(x, h + 1.2 + 1.2, z);
+            roofBox.castShadow = true;
+            scene.add(roofBox);
+
             // 楼栋标签 Sprite
             var sc = document.createElement('canvas');
             sc.width = 256; sc.height = 96;
@@ -252,20 +308,20 @@
         var mode = MODES[modeIdx];
 
         if (mode === '推拉') {
-            // 径向推拉: 远 140 → 近 45
-            var r = 45 + (1 - t) * 95;
-            pos.set(center.x + r, 55, center.z + r * 0.55);
-            look.set(center.x, 20, center.z);
+            // 径向推拉: 远 90 → 近 35
+            var r = 35 + (1 - t) * 55;
+            pos.set(center.x + r, 46, center.z + r * 0.55);
+            look.set(center.x, 18, center.z);
         } else if (mode === '盘旋') {
-            // 高空盘旋: 半径 110, 高度起伏
-            var r2 = 110;
-            pos.set(center.x + Math.cos(a) * r2, 60 + Math.sin(a * 0.5) * 18, center.z + Math.sin(a) * r2);
+            // 高空盘旋: 半径 75, 高度起伏
+            var r2 = 75;
+            pos.set(center.x + Math.cos(a) * r2, 48 + Math.sin(a * 0.5) * 14, center.z + Math.sin(a) * r2);
             look.set(center.x, 10, center.z);
         } else {
-            // 环绕低空: 半径 60, 贴地环绕
-            var r3 = 60;
-            pos.set(center.x + Math.cos(a) * r3, 16 + Math.sin(a * 2) * 6, center.z + Math.sin(a) * r3);
-            look.set(center.x, 12, center.z);
+            // 环绕低空: 半径 42, 贴地环绕
+            var r3 = 42;
+            pos.set(center.x + Math.cos(a) * r3, 14 + Math.sin(a * 2) * 5, center.z + Math.sin(a) * r3);
+            look.set(center.x, 10, center.z);
         }
         camera.position.lerp(pos, 1 - Math.pow(0.001, dt));
         controls.target.lerp(look, 1 - Math.pow(0.001, dt));
