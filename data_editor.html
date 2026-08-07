@@ -146,9 +146,9 @@
     .toast.show { display: block; animation: ddIn 0.25s ease; }
     @keyframes ddIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
-    /* 返回顶部按钮 */
+    /* 返回顶部按钮 (左下角, 避免遮挡右下表格内容) */
     .to-top {
-        position: fixed; right: 22px; bottom: 30px;
+        position: fixed; left: 22px; bottom: 30px;
         width: 46px; height: 46px; border-radius: 50%;
         border: 1px solid rgba(0, 200, 255, 0.5);
         background: rgba(10, 18, 40, 0.92);
@@ -159,6 +159,32 @@
     }
     .to-top.show { opacity: 1; visibility: visible; transform: none; }
     .to-top:hover { background: rgba(0, 200, 255, 0.22); box-shadow: 0 0 20px rgba(0, 200, 255, 0.55); }
+    /* 手机端卡片式布局 (≤768px) */
+    @media (max-width: 768px) {
+        table { min-width: 0; }
+        thead { display: none; }
+        tbody tr.m-card td {
+            padding: 12px;
+            border: 1px solid rgba(0, 200, 255, 0.18);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: block;
+            background: rgba(16, 28, 56, 0.55);
+        }
+        tbody tr.m-card.sold { background: rgba(74, 222, 128, 0.07); }
+        tbody tr.m-card.sub { background: rgba(251, 191, 36, 0.07); }
+        .m-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .m-bname { font-size: 18px; font-weight: 800; color: #9fd8ff; }
+        .m-room { font-size: 16px; color: #dfe8ff; font-weight: 600; }
+        .m-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+        .m-f { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #8a93b8; }
+        .m-f label { min-width: 58px; text-align: right; flex-shrink: 0; }
+        .m-f input { flex: 1; min-width: 0; }
+        .m-f .calc-cell { flex: 1; text-align: left; }
+        .m-foot { margin-top: 10px; text-align: right; border-top: 1px dashed rgba(0, 200, 255, 0.15); padding-top: 8px; }
+        .table-wrap { padding: 0 12px; }
+    }
+
     .tip { max-width: 1400px; margin: 0 auto 10px; padding: 0 16px; font-size: 11px; color: #5f6d96; }
     .tip b { color: #7fd8ff; }
 
@@ -273,6 +299,8 @@
             }
             return true;
         });
+        // 手机端(≤768px) → 卡片式布局, 完整显示所有字段, 无需横向滚动
+        if (window.innerWidth <= 768) { renderMobile(list); updateStats(); return; }
         const tb = document.getElementById('tbody');
         tb.innerHTML = '';
         rows = [];
@@ -342,6 +370,66 @@
     function refreshRowClass(tr, d) {
         const st = getStatus(d);
         tr.className = st;
+    }
+
+    // 手机端卡片式渲染 (≤768px): 每套房一张卡, 字段完整无遮挡
+    function renderMobile(list) {
+        const tb = document.getElementById('tbody');
+        tb.innerHTML = '';
+        rows = [];
+        list.forEach((d, i) => {
+            const idx = data.indexOf(d);
+            const st = getStatus(d);
+            const tr = document.createElement('tr');
+            tr.className = st + ' m-card';
+            tr.innerHTML = `
+                <td colspan="14">
+                    <div class="m-head">
+                        <span class="m-bname">${esc(bname(d.building))}</span>
+                        <span class="m-room">${esc(String(d.room).replace(/^商/, ''))}</span>
+                        <span class="st st-${st}">${ST_TXT[st]}</span>
+                    </div>
+                    <div class="m-grid">
+                        <div class="m-f"><label>户型</label><input type="text" value="${esc(d.layout || '')}" data-k="layout"></div>
+                        <div class="m-f"><label>类型</label><input type="text" value="${esc(d.type || '')}" data-k="type"></div>
+                        <div class="m-f"><label>面积㎡</label><input type="number" step="0.01" value="${d.area}" data-k="area"></div>
+                        <div class="m-f"><label>单价</label><input type="number" step="1" value="${d.price}" data-k="price"></div>
+                        <div class="m-f"><label>总价</label><span class="calc-cell calc-total">${fmt(d.area * d.price)}</span></div>
+                        <div class="m-f"><label>认购客户</label><input type="text" value="${esc(d.customer === '-' ? '' : d.customer)}" data-k="customer"></div>
+                        <div class="m-f"><label>网签日期</label><input type="text" value="${esc(d.signDate || '')}" data-k="signDate"></div>
+                        <div class="m-f"><label>客户</label><input type="text" value="${esc(d.customer === '-' ? '' : d.customer)}" data-k="customer2"></div>
+                        <div class="m-f"><label>成交单价</label><input type="number" step="1" value="${d.dealPrice || ''}" data-k="dealPrice"></div>
+                        <div class="m-f"><label>成交总价</label><span class="calc-cell calc-deal">${d.dealPrice > 0 ? fmt(d.area * d.dealPrice) : '—'}</span></div>
+                    </div>
+                    <div class="m-foot"><button class="del-btn">✕ 删除</button></div>
+                </td>`;
+            // 编辑事件
+            tr.querySelectorAll('input[data-k]').forEach(inp => {
+                inp.addEventListener('change', () => {
+                    const k = inp.dataset.k;
+                    const v = inp.value;
+                    if (k === 'customer' || k === 'customer2') {
+                        d.customer = v || '-';
+                        tr.querySelectorAll('input[data-k="customer"], input[data-k="customer2"]').forEach(o => { if (o !== inp) o.value = v; });
+                    } else if (k === 'area' || k === 'price' || k === 'dealPrice') {
+                        d[k] = parseFloat(v) || 0;
+                        d.total = d.area * d.price;
+                        d.dealTotal = d.area * (d.dealPrice || 0);
+                        tr.querySelector('.calc-total').textContent = fmt(d.total);
+                        tr.querySelector('.calc-deal').textContent = d.dealPrice > 0 ? fmt(d.dealTotal) : '—';
+                    } else {
+                        d[k] = v;
+                    }
+                    tr.className = getStatus(d) + ' m-card';
+                });
+            });
+            tr.querySelector('.del-btn').addEventListener('click', () => {
+                data.splice(idx, 1);
+                render();
+            });
+            tb.appendChild(tr);
+            rows.push({ tr, idx });
+        });
     }
 
     function updateStats() {
