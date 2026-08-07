@@ -220,7 +220,7 @@
             sctx.textBaseline = 'middle';
             sctx.fillText(bname(b.id), 128, 52);
             var spr = new THREE.Sprite(new THREE.SpriteMaterial({
-                map: new THREE.CanvasTexture(sc), transparent: true, depthTest: false
+                map: new THREE.CanvasTexture(sc), transparent: true, depthTest: true, depthWrite: false
             }));
             spr.scale.set(10, 3.8, 1);
             spr.position.set(x, h + 4.5, z);
@@ -457,6 +457,7 @@
     window.pickBuilding = pickBuilding;
     window.pickRoom = pickRoom;
     window.toggleDD = toggleDD;
+    window.__scene = scene;   // 调试/验证用
     fillBuildings();
 
     // 用户拖拽/缩放 → 打断镜头路线, 暂停巡航 8 秒
