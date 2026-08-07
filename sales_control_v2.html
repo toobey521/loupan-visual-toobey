@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>楼盘销控可视化-Toobey</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 15px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .header h1 { font-size: 22px; font-weight: 600; margin-bottom: 10px; }
+        .header .stats {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .header .stat {
+            background: rgba(255,255,255,0.2);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+        .header .stat b { font-weight: 600; }
+        
+        .building-nav {
+            padding: 12px 10px;
+            background: rgba(255,255,255,0.05);
+            position: sticky;
+            top: 75px;
+            z-index: 99;
+            backdrop-filter: blur(10px);
+        }
+        .building-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 8px;
+            padding: 5px 10px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .building-scroll::-webkit-scrollbar { display: none; }
+        .building-btn {
+            flex-shrink: 0;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 20px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        .building-btn:hover { background: rgba(102, 126, 234, 0.4); }
+        .building-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 12px;
+            margin: 12px 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .legend-dot.sold { background: #4ade80; }
+        .legend-dot.subscribed { background: #fbbf24; }
+        .legend-dot.unsold { background: #6b7280; }
+        
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 10px;
+            background: rgba(255,255,255,0.05);
+            margin: 0 15px 15px;
+            border-radius: 12px;
+        }
+        .stat-item { text-align: center; }
+        .stat-item .num { font-size: 20px; font-weight: 700; }
+        .stat-item .label { font-size: 11px; opacity: 0.6; margin-top: 2px; }
+        .num.sold { color: #4ade80; }
+        .num.subscribed { color: #fbbf24; }
+        .num.unsold { color: #9ca3af; }
+        
+        .sales-grid {
+            padding: 10px 12px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+            gap: 10px;
+        }
+        .room-card {
+            background: rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 14px 12px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .room-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .room-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+        
+        .room-card.sold {
+            background: linear-gradient(180deg, rgba(74, 222, 128, 0.12) 0%, rgba(74, 222, 128, 0.05) 100%);
+            border-color: rgba(74, 222, 128, 0.25);
+        }
+        .room-card.sold::after { background: #4ade80; opacity: 1; }
+        
+        .room-card.subscribed {
+            background: linear-gradient(180deg, rgba(251, 191, 36, 0.12) 0%, rgba(251, 191, 36, 0.05) 100%);
+            border-color: rgba(251, 191, 36, 0.25);
+        }
+        .room-card.subscribed::after { background: #fbbf24; opacity: 1; }
+        
+        .room-card.unsold { background: rgba(255,255,255,0.05); }
+        .room-card.unsold::after { background: #6b7280; opacity: 1; }
+        
+        .room-number { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+        .room-info { font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
+        
+        .room-price-row { display: flex; justify-content: center; gap: 10px; margin-bottom: 6px; }
+        .room-price-item { text-align: center; }
+        .room-price-item .price { font-size: 12px; color: #fbbf24; font-weight: 600; }
+        .room-price-item .label { font-size: 9px; color: rgba(255,255,255,0.4); }
+        
+        .room-customer {
+            font-size: 10px;
+            color: #4ade80;
+            background: rgba(74, 222, 128, 0.15);
+            padding: 3px 8px;
+            border-radius: 8px;
+            margin-top: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .room-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+        .status-signed { background: #4ade80; color: #000; }
+        .status-subscribed { background: #fbbf24; color: #000; }
+        .status-unsold { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.15); }
+        
+        .bottom-space { height: 30px; }
+
+        /* ===== Toobey 新增: 演示标签 / 卡片动画 / 装修参考弹窗 ===== */
+        .demo-tag {
+            display: inline-block; vertical-align: middle; margin-left: 8px;
+            font-size: 11px; font-weight: 400; color: #ffd77a;
+            background: rgba(255,215,122,0.12); border: 1px solid rgba(255,215,122,0.4);
+            padding: 2px 8px; border-radius: 10px; letter-spacing: 1px;
+        }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(14px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .room-card { animation: cardIn 0.45s ease both; }
+        .room-card { cursor: pointer; }
+        .room-card .room-hint {
+            font-size: 9px; color: rgba(255,255,255,0.35); margin-top: 6px;
+        }
+        .modal-mask {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            z-index: 999; display: none; align-items: center; justify-content: center;
+            padding: 15px; backdrop-filter: blur(4px);
+        }
+        .modal-mask.show { display: flex; animation: fadeIn 0.25s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal {
+            background: #1e2440; border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 18px; width: 100%; max-width: 560px; max-height: 90vh;
+            overflow-y: auto; padding: 20px; color: #fff;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: modalUp 0.3s ease;
+        }
+        @keyframes modalUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+        .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .modal-title { font-size: 20px; font-weight: 700; }
+        .modal-close {
+            width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
+            background: rgba(255,255,255,0.12); color: #fff; font-size: 16px; line-height: 1;
+        }
+        .modal-close:hover { background: rgba(255,255,255,0.25); }
+        .modal-info { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 12px; color: rgba(255,255,255,0.75); margin-bottom: 6px; }
+        .modal-info b { color: #ffd77a; }
+        .modal-section { margin-top: 16px; }
+        .modal-section-title { font-size: 14px; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .modal-section-title::before { content: ''; width: 4px; height: 14px; border-radius: 2px; background: linear-gradient(180deg,#667eea,#764ba2); }
+        .modal-floorplan {
+            width: 100%; border-radius: 12px; background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08); padding: 8px;
+        }
+        .modal-floorplan img { width: 100%; border-radius: 8px; display: block; }
+        .modal-floorplan .missing { text-align: center; color: rgba(255,255,255,0.4); font-size: 12px; padding: 30px 10px; }
+        .decor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+        .decor-card {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 12px; transition: all 0.25s;
+        }
+        .decor-card:hover { transform: translateY(-3px); border-color: rgba(102,126,234,0.6); box-shadow: 0 6px 20px rgba(0,0,0,0.35); }
+        .decor-name { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+        .decor-en { font-size: 9px; color: rgba(255,255,255,0.4); margin-bottom: 6px; }
+        .decor-desc { font-size: 10px; color: rgba(255,255,255,0.6); line-height: 1.5; margin-bottom: 8px; min-height: 30px; }
+        .decor-colors { display: flex; gap: 5px; margin-bottom: 10px; }
+        .decor-colors span { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); }
+        .decor-btn {
+            width: 100%; padding: 7px 0; border-radius: 8px; border: none; cursor: pointer;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff; font-size: 11px; transition: opacity 0.2s;
+        }
+        .decor-btn:hover { opacity: 0.85; }
+        .decor-btn.copied { background: linear-gradient(135deg, #34d399 0%, #059669 100%); }
+        .decor-roomgpt {
+            margin-top: 10px; display: flex; align-items: center; justify-content: space-between;
+            gap: 8px; background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3);
+            border-radius: 10px; padding: 10px 12px; font-size: 11px; color: #a7f3d0;
+        }
+        .decor-roomgpt a { color: #34d399; font-weight: 700; text-decoration: none; white-space: nowrap; }
+        .decor-roomgpt a:hover { text-decoration: underline; }
+
+        @media (max-width: 380px) {
+            .sales-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .room-card { padding: 12px 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏠 楼盘销控可视化-Toobey <span class="demo-tag">演示数据</span></h1>
+        <div class="stats">
+            <span class="stat">总 <b id="totalCount">437</b> 套</span>
+            <span class="stat">已售 <b id="signedCount">93</b> 套</span>
+            <span class="stat">认购 <b id="subCount">0</b> 套</span>
+            <span class="stat">待售 <b id="remainCount">344</b> 套</span>
+        </div>
+    </div>
+    
+    <div class="building-nav">
+        <div class="building-scroll" id="buildingScroll"></div>
+    </div>
+    
+    <div class="legend">
+        <div class="legend-item"><div class="legend-dot sold"></div>已网签</div>
+        <div class="legend-item"><div class="legend-dot subscribed"></div>认购</div>
+        <div class="legend-item"><div class="legend-dot unsold"></div>待售</div>
+    </div>
+    
+    <div class="stats-bar">
+        <div class="stat-item">
+            <div class="num" id="currentTotal">0</div>
+            <div class="label">当前楼栋</div>
+        </div>
+        <div class="stat-item">
+            <div class="num sold" id="currentSigned">0</div>
+            <div class="label">已售</div>
+        </div>
+        <div class="stat-item">
+            <div class="num subscribed" id="currentSub">0</div>
+            <div class="label">认购</div>
+        </div>
+        <div class="stat-item">
+            <div class="num unsold" id="currentUnsold">0</div>
+            <div class="label">待售</div>
+        </div>
+    </div>
+    
+    <div class="sales-grid" id="salesGrid"></div>
+    <div class="bottom-space"></div>
+
+    <!-- ===== Toobey 新增: 房源详情 + 装修设计参考弹窗 ===== -->
+    <div class="modal-mask" id="roomModal" onclick="if(event.target===this)closeRoomModal()">
+        <div class="modal">
+            <div class="modal-head">
+                <div class="modal-title" id="mTitle">—</div>
+                <button class="modal-close" onclick="closeRoomModal()">✕</button>
+            </div>
+            <div class="modal-info" id="mInfo"></div>
+            <div class="modal-info" id="mDeal"></div>
+            <div class="modal-section">
+                <div class="modal-section-title">📐 户型图纸</div>
+                <div class="modal-floorplan" id="mFloorplan"></div>
+            </div>
+            <div class="modal-section">
+                <div class="modal-section-title">🎨 装修设计参考方案</div>
+                <div class="decor-grid" id="mDecor"></div>
+                <div class="decor-roomgpt">
+                    <span>想直接看效果图？用 AI 生成装修效果图：上传本户型照片 → 粘贴风格提示词</span>
+                    <a href="https://www.roomgpt.io/" target="_blank" rel="noopener">打开 roomGPT ↗</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="data/units.js"></script>
+    <script>
+        const allData = window.UNITS;
+        
+        let currentBuilding = new URLSearchParams(location.search).get('b') || '1#';
+        
+        function getStatus(d) {
+            if (d.signStatus === '已网签') return 'sold';
+            if (d.customer && d.customer !== '-') return 'subscribed';
+            return 'unsold';
+        }
+        
+        function getStatusText(d) {
+            if (d.signStatus === '已网签') return '已网签';
+            if (d.customer && d.customer !== '-') return '认购';
+            return '待售';
+        }
+        
+        function initBuildingNav() {
+            const buildings = [...new Set(allData.map(d => d.building))].sort((a, b) => {
+                const numA = parseInt(a.replace(/[^0-9]/g, '')) || 999;
+                const numB = parseInt(b.replace(/[^0-9]/g, '')) || 999;
+                return numA - numB;
+            });
+            const scroll = document.getElementById('buildingScroll');
+            scroll.innerHTML = buildings.map(b => 
+                `<button class="building-btn ${b === currentBuilding ? 'active' : ''}" onclick="selectBuilding('${b}')">${b}</button>`
+            ).join('');
+        }
+        
+        function selectBuilding(building) {
+            currentBuilding = building;
+            document.querySelectorAll('.building-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent === building);
+            });
+            updateSalesGrid();
+        }
+        
+        function updateSalesGrid() {
+            const grid = document.getElementById('salesGrid');
+            const data = allData.filter(d => d.building === currentBuilding).sort((a, b) => {
+                const floorA = parseInt(a.room.replace(/[^0-9]/g, '')) || 0;
+                const floorB = parseInt(b.room.replace(/[^0-9]/g, '')) || 0;
+                return floorB - floorA;
+            });
+            
+            const sold = data.filter(d => getStatus(d) === 'sold').length;
+            const sub = data.filter(d => getStatus(d) === 'subscribed').length;
+            const unsold = data.filter(d => getStatus(d) === 'unsold').length;
+            
+            countUp(document.getElementById('currentTotal'), data.length, 400);
+            countUp(document.getElementById('currentSigned'), sold, 400);
+            countUp(document.getElementById('currentSub'), sub, 400);
+            countUp(document.getElementById('currentUnsold'), unsold, 400);
+            
+            grid.innerHTML = data.map((d, idx) => {
+                const status = getStatus(d);
+                const statusText = getStatusText(d);
+                const customerHtml = d.customer && d.customer !== '-' ? 
+                    `<div class="room-customer">${d.customer}</div>` : '';
+                
+                // 价格计算
+                const unitPrice = d.dealPrice > 0 ? d.dealPrice : d.price;
+                const totalPrice = d.dealTotal > 0 ? d.dealTotal : d.total;
+                
+                return `<div class="room-card ${status}" data-b="${d.building}" data-r="${d.room}" style="animation-delay:${Math.min(idx, 14) * 0.04}s">
+                    <div class="room-number">${d.room}</div>
+                    <div class="room-info">${d.layout} · ${d.area.toFixed(1)}㎡</div>
+                    <div class="room-price-row">
+                        <div class="room-price-item">
+                            <div class="price">${unitPrice.toLocaleString()}</div>
+                            <div class="label">单价/㎡</div>
+                        </div>
+                        <div class="room-price-item">
+                            <div class="price">${(totalPrice/10000).toFixed(0)}</div>
+                            <div class="label">总价万</div>
+                        </div>
+                    </div>
+                    ${customerHtml}
+                    <span class="room-status status-${status === 'sold' ? 'signed' : status === 'subscribed' ? 'subscribed' : 'unsold'}">${statusText}</span>
+                    <div class="room-hint">点击查看图纸 & 装修参考</div>
+                </div>`;
+            }).join('');
+        }
+        
+        // ===== Toobey 新增: 装修设计参考方案数据 =====
+        const DECOR_STYLES = [
+            { name: '现代简约', en: 'Modern Minimalist',
+              desc: '黑白灰基调 + 金属线条，通透利落，适合追求效率的年轻家庭',
+              colors: ['#2f2f2f', '#f7f7f5', '#c9a063'],
+              prompt: 'Modern minimalist interior design for a spacious apartment, neutral white and grey palette, black metal accents, floor-to-ceiling windows, clean lines, designer sofa, warm wood floor, photorealistic, 8k' },
+            { name: '新中式', en: 'New Chinese Style',
+              desc: '胡桃木 + 留白意境，东方雅韵与现代舒适兼得',
+              colors: ['#6b4f2e', '#f5f0e6', '#8a9a5b'],
+              prompt: 'New Chinese style interior design, dark walnut wood panels, elegant white walls with subtle ink painting decor, symmetric layout, warm ambient lighting, traditional lattice screens, modern furniture, photorealistic, 8k' },
+            { name: '北欧原木', en: 'Nordic Wood',
+              desc: '原木 + 棉麻布艺，明亮治愈，生活感十足',
+              colors: ['#c9a876', '#faf7f0', '#7f9a72'],
+              prompt: 'Scandinavian interior design with light oak wood, cozy linen sofa, soft neutral tones, lots of natural light, potted plants, hygge atmosphere, minimalist decor, photorealistic, 8k' },
+            { name: '意式轻奢', en: 'Italian Light Luxury',
+              desc: '大理石 + 黄铜 + 丝绒，精致优雅的轻奢质感',
+              colors: ['#3a3f44', '#e8dcc8', '#b08d57'],
+              prompt: 'Italian light luxury interior design, marble feature wall, brass fixtures, velvet furniture in beige and taupe, sophisticated mood lighting, elegant drapes, high-end finishes, photorealistic, 8k' },
+            { name: '奶油风', en: 'Cream Style',
+              desc: '奶油色系 + 圆润线条，温柔治愈的网红风格',
+              colors: ['#f3e9dc', '#e8d5b7', '#c49a6c'],
+              prompt: 'Cream style interior design, soft milky beige tones, rounded furniture edges, fluffy boucle sofa, arched details, cozy warm lighting, minimal accessories, dreamy soft atmosphere, photorealistic, 8k' },
+        ];
+
+        function openRoomModal(building, room) {
+            const d = allData.find(x => x.building === building && x.room === room);
+            if (!d) return;
+            const status = getStatus(d);
+            const statusText = getStatusText(d);
+            document.getElementById('mTitle').innerHTML = `${d.building} ${d.room} <span class="room-status status-${status === 'sold' ? 'signed' : status}">${statusText}</span>`;
+            const unitPrice = d.dealPrice > 0 ? d.dealPrice : d.price;
+            const totalPrice = d.dealTotal > 0 ? d.dealTotal : d.total;
+            document.getElementById('mInfo').innerHTML =
+                `户型 <b>${d.layout}</b> · 类型 <b>${d.type}</b> · 面积 <b>${d.area.toFixed(1)}㎡</b> · ` +
+                `单价 <b>${unitPrice.toLocaleString()} 元/㎡</b> · 总价 <b>${(totalPrice/10000).toFixed(1)} 万元</b>`;
+            let dealHtml = '';
+            if (d.signStatus === '已网签') {
+                dealHtml = `已网签日期 <b>${d.signDate || '—'}</b> · 客户 <b>${d.customer || '—'}</b> · ` +
+                    `成交单价 <b>${(d.dealPrice||0).toLocaleString()} 元/㎡</b> · 成交总价 <b>${((d.dealTotal||0)/10000).toFixed(1)} 万元</b>` +
+                    (d.gift ? ` · 签约礼 <b>${d.gift}</b>` : '');
+            } else if (d.customer && d.customer !== '-') {
+                dealHtml = `认购客户 <b>${d.customer}</b>`;
+            }
+            document.getElementById('mDeal').innerHTML = dealHtml;
+
+            // 户型图纸: layout "188㎡" → floorplans/188.svg
+            const fp = document.getElementById('mFloorplan');
+            const m = /(\d+(?:\.\d+)?)\s*㎡/.exec(d.layout);
+            if (m) {
+                const num = m[1];
+                const img = new Image();
+                img.onload = () => { fp.innerHTML = `<img src="floorplans/${num}.svg" alt="${d.layout} 户型图">`; };
+                img.onerror = () => {
+                    const img2 = new Image();
+                    img2.onload = () => { fp.innerHTML = `<img src="floorplans/${num}.jpg" alt="${d.layout} 户型图">`; };
+                    img2.onerror = () => { fp.innerHTML = `<div class="missing">该户型图纸待补充<br><small>请将图纸保存为 floorplans/${num}.svg</small></div>`; };
+                    img2.src = `floorplans/${num}.jpg`;
+                };
+                img.src = `floorplans/${num}.svg`;
+            } else {
+                fp.innerHTML = `<div class="missing">${d.type}暂无户型图纸</div>`;
+            }
+
+            // 装修设计参考
+            document.getElementById('mDecor').innerHTML = DECOR_STYLES.map((s, i) => `
+                <div class="decor-card">
+                    <div class="decor-name">${s.name}</div>
+                    <div class="decor-en">${s.en}</div>
+                    <div class="decor-desc">${s.desc}</div>
+                    <div class="decor-colors">${s.colors.map(c => `<span style="background:${c}"></span>`).join('')}</div>
+                    <button class="decor-btn" onclick="copyPrompt(this, ${i})">📋 复制提示词</button>
+                </div>`).join('');
+
+            document.getElementById('roomModal').classList.add('show');
+        }
+
+        function closeRoomModal() {
+            document.getElementById('roomModal').classList.remove('show');
+        }
+
+        function copyPrompt(btn, i) {
+            const text = DECOR_STYLES[i].prompt;
+            const done = () => {
+                btn.textContent = '✅ 已复制';
+                btn.classList.add('copied');
+                setTimeout(() => { btn.textContent = '📋 复制提示词'; btn.classList.remove('copied'); }, 1800);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+            } else {
+                fallbackCopy(text, done);
+            }
+        }
+        function fallbackCopy(text, done) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); done(); } catch (e) {}
+            document.body.removeChild(ta);
+        }
+
+        // 数字滚动动效
+        function countUp(el, target, dur) {
+            dur = dur || 600;
+            const start = performance.now();
+            function tick(now) {
+                const p = Math.min((now - start) / dur, 1);
+                el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+                if (p < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        }
+
+        // 初始化
+        initBuildingNav();
+        updateSalesGrid();
+
+        // 点击房间卡片 → 查看户型图纸 & 装修设计参考
+        document.getElementById('salesGrid').addEventListener('click', e => {
+            const card = e.target.closest('.room-card');
+            if (card) openRoomModal(card.dataset.b, card.dataset.r);
+        });
+        // 键盘 Esc 关闭弹窗
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeRoomModal(); });
+
+        // 全局统计
+        const totalSigned = allData.filter(d => d.signStatus === '已网签').length;
+        const totalSub = allData.filter(d => getStatus(d) === 'subscribed').length;
+        countUp(document.getElementById('totalCount'), allData.length, 800);
+        countUp(document.getElementById('signedCount'), totalSigned, 800);
+        countUp(document.getElementById('subCount'), totalSub, 800);
+        countUp(document.getElementById('remainCount'), allData.length - totalSigned - totalSub, 800);
+    </script>
+</body>
+</html>

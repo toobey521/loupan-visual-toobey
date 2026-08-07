@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6411 6283" style="background:#faf8f5;font-family:'Microsoft YaHei',sans-serif;">
+    <defs>
+        <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+            <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#f0e8d8" stroke-width="0.5"/>
+        </pattern>
+    </defs>
+    <rect width="6411" height="6283" fill="url(#grid)"/>
+    <text x="20" y="35" font-size="20" font-weight="700" fill="#6b5435">襄河·1号 · 乐山 168㎡</text>
+    <text x="20" y="60" font-size="13" fill="#999">4室2厅3卫 · 南北双阳台 · 8.1米至宽景观阳台</text>
+    <rect x="0" y="70" width="84" height="178" fill="#fde2dc" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
+    <text x="42.0" y="162.66666666666666" font-size="11" fill="#5a4830" text-anchor="middle">次卧</text>
+    <rect x="84" y="70" width="72" height="178" fill="#fde2dc" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
+    <text x="120.0" y="162.66666666666666" font-size="11" fill="#5a4830" text-anchor="middle">次卧</text>
+    <rect x="0" y="248" width="22" height="105" fill="#e8f4f8" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
+    <rect x="22" y="248" width="109" height="105" fill="#ffe8d8" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
+    <text x="76.5" y="304.1666666666667" font-size="11" fill="#5a4830" text-anchor="middle">主卧</text>
+    <rect x="132" y="70" width="102" height="45" fill="#d4f1d4" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
+    <text x="183.0" y="96.16666666666667" font-size="11" fill="#5a4830" text-anchor="middle">阳台</text>
+    <rect x="132" y="115" width="54" height="21" fill="#e0e0e0" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
+    <rect x="186" y="70" width="54" height="45" fill="#fff8e0" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
+    <text x="213.0" y="95.5" font-size="9" fill="#5a4830" text-anchor="middle">餐厅</text>
+    <rect x="240" y="70" width="90" height="45" fill="#fff8e0" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
+    <text x="285.0" y="96.16666666666667" font-size="11" fill="#5a4830" text-anchor="middle">厨房</text>
+    <rect x="132" y="136" width="81" height="39" fill="#fffbe0" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
+    <text x="172.5" y="159.16666666666666" font-size="11" fill="#5a4830" text-anchor="middle">客厅</text>
+    <rect x="213" y="136" width="117" height="39" fill="#d4f1d4" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
+    <text x="271.5" y="159.16666666666666" font-size="11" fill="#5a4830" text-anchor="middle">空中花园</text>
+    <rect x="132" y="175" width="111" height="178" fill="#ffe8d8" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
+    <text x="187.5" y="267.6666666666667" font-size="11" fill="#5a4830" text-anchor="middle">主卧</text>
+    <rect x="243" y="175" width="87" height="178" fill="#ffe8d8" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
+    <text x="286.5" y="267.6666666666667" font-size="11" fill="#5a4830" text-anchor="middle">主卧</text>
+    <rect x="330" y="175" width="81" height="178" fill="#fde2dc" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
+    <text x="370.5" y="267.6666666666667" font-size="11" fill="#5a4830" text-anchor="middle">次卧</text>
+    <rect x="213" y="70" width="57" height="66" fill="#e8f4f8" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
+    <text x="241.5" y="106.0" font-size="9" fill="#5a4830" text-anchor="middle">卫</text>
+    <rect x="270" y="70" width="60" height="66" fill="#e8f4f8" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
+    <text x="300.0" y="106.33333333333333" font-size="10" fill="#5a4830" text-anchor="middle">卫</text>
+    <rect x="330" y="70" width="81" height="105" fill="#faf8f5" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
+    <text x="370.5" y="126.16666666666667" font-size="11" fill="#5a4830" text-anchor="middle">玄关</text>
+    <rect x="330" y="248" width="81" height="105" fill="#f0e8d8" stroke="#8b6f47" stroke-width="1.2" rx="2"/>
+    <text x="370.5" y="304.1666666666667" font-size="11" fill="#5a4830" text-anchor="middle">衣帽间</text>
+    <text x="3205.5" y="6268" font-size="11" fill="#bbb" text-anchor="middle">（简化示意图，以售楼处公示为准）</text>
+</svg>
