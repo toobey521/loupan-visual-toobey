@@ -127,6 +127,7 @@
     }
     .st { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
     .bname-cell { padding: 6px 4px; color: #9fd8ff; font-weight: 600; text-align: center; }
+    .calc-cell { padding: 6px 4px; color: #ffd77a; font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
     .st-unsold { background: rgba(139, 147, 184, 0.2); color: #9aa3c0; }
     .st-sub { background: rgba(251, 191, 36, 0.18); color: #ffb347; }
     .st-sold { background: rgba(74, 222, 128, 0.18); color: #4ade80; }
@@ -257,6 +258,7 @@
         return 'unsold';
     }
     const ST_TXT = { sold: '已网签', sub: '认购', unsold: '待售' };
+    const fmt = n => (n ? Math.round(n) : 0).toLocaleString('zh-CN');
 
     function render() {
         const fb = document.getElementById('fBd').value;
@@ -291,12 +293,12 @@
                 <td><input type="text" value="${esc(d.type)}" data-k="type"></td>
                 <td><input type="number" step="0.01" value="${d.area}" data-k="area"></td>
                 <td><input type="number" step="1" value="${d.price}" data-k="price"></td>
-                <td><input type="number" step="1" value="${d.total}" data-k="total"></td>
+                <td><div class="calc-cell calc-total">${fmt(d.area * d.price)}</div></td>
                 <td><input type="text" value="${esc(d.customer === '-' ? '' : d.customer)}" data-k="customer" placeholder="认购客户"></td>
                 <td><input type="text" value="${esc(d.signDate || '')}" data-k="signDate" placeholder="2026-08-07"></td>
                 <td><input type="text" value="${esc(d.customer === '-' ? '' : d.customer)}" data-k="customer2" placeholder="成交客户"></td>
                 <td><input type="number" step="1" value="${d.dealPrice || ''}" data-k="dealPrice"></td>
-                <td><input type="number" step="1" value="${d.dealTotal || ''}" data-k="dealTotal"></td>
+                <td><div class="calc-cell calc-deal">${d.dealPrice > 0 ? fmt(d.area * d.dealPrice) : '—'}</div></td>
                 <td><button class="del-btn" title="删除">✕</button></td>
             `;
             // 绑定编辑事件
@@ -307,8 +309,13 @@
                     if (k === 'customer' || k === 'customer2') {
                         d.customer = v || '-';
                         tr.querySelectorAll('input[data-k="customer"], input[data-k="customer2"]').forEach(o => { if (o !== inp) o.value = v; });
-                    } else if (k === 'area' || k === 'price' || k === 'total' || k === 'dealPrice' || k === 'dealTotal') {
+                    } else if (k === 'area' || k === 'price' || k === 'dealPrice') {
                         d[k] = parseFloat(v) || 0;
+                        // 公式联动: 总价 = 面积×单价; 成交总价 = 面积×成交单价
+                        d.total = d.area * d.price;
+                        d.dealTotal = d.area * (d.dealPrice || 0);
+                        tr.querySelector('.calc-total').textContent = fmt(d.total);
+                        tr.querySelector('.calc-deal').textContent = d.dealPrice > 0 ? fmt(d.dealTotal) : '—';
                     } else {
                         d[k] = v;
                     }
