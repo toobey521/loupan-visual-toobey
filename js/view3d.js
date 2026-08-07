@@ -94,6 +94,26 @@
         return maxF || 16;
     }
 
+    // 每层户数: 统计该楼栋最常见的同层房间号个数 (每户一窗, 窗户=真实房屋)
+    function unitsPerFloorOf(buildingId) {
+        var perFloor = {};
+        UNITS.forEach(function (u) {
+            if (u.building !== buildingId) return;
+            var n = parseInt(String(u.room).replace(/[^0-9]/g, ''), 10);
+            var floor = Math.floor(n / 100) || 1;
+            if (!perFloor[floor]) perFloor[floor] = 0;
+            perFloor[floor]++;
+        });
+        var counts = {};
+        for (var f in perFloor) {
+            var c = perFloor[f];
+            counts[c] = (counts[c] || 0) + 1;
+        }
+        var best = 0, bestC = 0;
+        for (var c2 in counts) if (counts[c2] > bestC) { bestC = counts[c2]; best = parseInt(c2, 10); }
+        return best || 4;
+    }
+
     function buildScene() {
         var src = HOTSPOTS.length ? HOTSPOTS : [];
         // 3D 布局: 按原坐标排序分 5 行 5 列网格化 (保证分散不重叠 + 保持上下/左右相对方位)
@@ -111,8 +131,9 @@
             if (shop) { w = 7.5; d = 6; }
 
             var geo = new THREE.BoxGeometry(w, h, d);
+            var cols = shop ? 4 : unitsPerFloorOf(b.id);   // 每层户数 = 窗户列数 (窗户对应真实房屋)
             var mat = new THREE.MeshStandardMaterial({
-                map: makeWindowTexture(shop ? 2 : floors, shop ? 6 : Math.max(2, Math.round(w / 1.8)), shop ? 0.85 : 0.55),
+                map: makeWindowTexture(shop ? 2 : floors, cols, shop ? 0.85 : 0.55),
                 emissive: new THREE.Color(0x0a2a4a),
                 emissiveIntensity: 0.6,
                 roughness: 0.55,
