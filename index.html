@@ -8,21 +8,39 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #faf8f5 0%, #f0ebe2 100%);
-            color: #2c2c2c;
+            background:
+                linear-gradient(rgba(0, 200, 255, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 200, 255, 0.045) 1px, transparent 1px),
+                linear-gradient(160deg, #080c1a 0%, #0d1730 50%, #091226 100%);
+            background-size: 44px 44px, 44px 44px, 100% 100%;
+            color: #dfe3f2;
             min-height: 100vh;
         }
         .hero {
-            background: linear-gradient(135deg, #8b6f47 0%, #6b5435 100%);
+            background:
+                radial-gradient(ellipse 80% 60% at 50% -20%, rgba(0, 200, 255, 0.25) 0%, transparent 60%),
+                linear-gradient(135deg, #101c3c 0%, #16245c 50%, #1a1040 100%);
             color: #fff;
             padding: 50px 20px 40px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid rgba(0, 200, 255, 0.25);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
+        .hero::after {
+            content: '';
+            position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, #00c8ff, #7b68ee, #00c8ff, transparent);
+            animation: heroLine 3.5s linear infinite;
+        }
+        @keyframes heroLine { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
         .hero .brand {
             font-size: 12px;
             letter-spacing: 4px;
-            opacity: 0.7;
+            opacity: 0.75;
             margin-bottom: 12px;
+            color: #7fd8ff;
         }
         .hero h1 {
             font-size: 38px;
@@ -30,10 +48,13 @@
             letter-spacing: 6px;
             margin-bottom: 8px;
             font-family: 'STSong', '宋体', serif;
+            text-shadow: 0 0 20px rgba(0, 200, 255, 0.5), 0 0 40px rgba(123, 104, 238, 0.35);
         }
         .hero .tag {
             display: inline-block;
-            background: rgba(255,255,255,0.18);
+            background: rgba(0, 200, 255, 0.12);
+            border: 1px solid rgba(0, 200, 255, 0.4);
+            color: #7fd8ff;
             padding: 6px 16px;
             border-radius: 30px;
             font-size: 12px;
@@ -44,6 +65,7 @@
             font-size: 13px;
             opacity: 0.85;
             letter-spacing: 1px;
+            color: #ffd77a;
         }
         .section {
             padding: 28px 16px;
@@ -56,134 +78,154 @@
             gap: 10px;
             font-size: 18px;
             font-weight: 700;
-            color: #6b5435;
+            color: #e8ecff;
             margin-bottom: 16px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #e8dfd0;
+            border-bottom: 1px solid rgba(0, 200, 255, 0.2);
+            text-shadow: 0 0 12px rgba(0, 200, 255, 0.35);
         }
         .section-title::before {
             content: '';
             display: block;
             width: 4px;
             height: 18px;
-            background: #8b6f47;
+            background: linear-gradient(180deg, #00c8ff, #7b68ee);
             border-radius: 2px;
+            box-shadow: 0 0 8px rgba(0, 200, 255, 0.6);
         }
         .section-sub {
             font-size: 12px;
-            color: #999;
+            color: #7c87ad;
             margin-bottom: 16px;
         }
 
         /* 总平图 */
         .plan-img-wrap {
-            background: #fff;
+            background: rgba(16, 28, 56, 0.75);
+            border: 1px solid rgba(0, 200, 255, 0.2);
             border-radius: 16px;
             padding: 16px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 24px rgba(0, 200, 255, 0.08);
             margin-bottom: 16px;
+            position: relative;
+            backdrop-filter: blur(8px);
+        }
+        .plan-img-wrap::before {
+            /* 热点定位参照：与图片同区域（padding 内） */
+            content: '';
+            position: absolute;
+            top: 16px; left: 16px; right: 16px; bottom: 16px;
         }
         .plan-img {
             width: 100%;
             border-radius: 8px;
             display: block;
         }
-        .plan-img-wrap {
-            position: relative;
-        }
         .plan-hotspots {
             position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            top: 16px; left: 16px;
+            width: calc(100% - 32px); height: calc(100% - 32px);
         }
         .plan-hint {
             text-align: center;
-            color: #bbb;
+            color: #5f6d96;
             font-size: 12px;
             padding: 8px;
         }
         .hs {
             position: absolute;
-            border-radius: 6px;
-            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            border: 2px solid rgba(74,144,217,0.8);
-            background: rgba(74,144,217,0.25);
-            transition: all 0.2s;
+            background: rgba(8, 30, 60, 0.78);
+            border: 1px solid rgba(0, 200, 255, 0.75);
+            border-radius: 8px;
+            color: #fff;
+            box-shadow: 0 0 8px rgba(0, 200, 255, 0.35), inset 0 0 6px rgba(0, 200, 255, 0.12);
+            backdrop-filter: blur(2px);
+            transition: all 0.25s;
+            animation: hsPulse 2.2s ease-in-out infinite;
             overflow: hidden;
+            z-index: 5;
+        }
+        @keyframes hsPulse {
+            0%, 100% { box-shadow: 0 0 6px rgba(0, 200, 255, 0.25), inset 0 0 6px rgba(0, 200, 255, 0.1); }
+            50% { box-shadow: 0 0 16px rgba(0, 200, 255, 0.6), inset 0 0 10px rgba(0, 200, 255, 0.2); }
         }
         .hs:hover {
-            background: rgba(255,200,50,0.4) !important;
-            border-color: #ffc832 !important;
-            transform: scale(1.05);
-            z-index: 10;
-            box-shadow: 0 4px 16px rgba(255,200,50,0.5);
+            background: rgba(0, 140, 220, 0.9);
+            transform: scale(1.12);
+            box-shadow: 0 0 20px rgba(0, 200, 255, 0.8);
+            animation: none;
+            z-index: 20;
         }
         .hs-label {
             font-size: 10px;
             font-weight: 700;
             color: #fff;
             text-align: center;
-            line-height: 1.2;
-            background: rgba(0,0,0,0.6);
-            padding: 3px 6px;
-            border-radius: 4px;
+            line-height: 1.25;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
             pointer-events: none;
             white-space: nowrap;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
+        .hs.shop .hs-label { color: #ffd77a; }
         .hs:hover .hs-label {
-            background: rgba(200,140,0,0.85);
+            background: rgba(0, 140, 220, 0.85);
         }
         .hs.shop {
-            border-color: rgba(224,112,64,0.8) !important;
-            background: rgba(224,112,64,0.25) !important;
+            border-color: rgba(255, 180, 60, 0.8);
+            background: rgba(80, 50, 10, 0.78);
+            box-shadow: 0 0 8px rgba(255, 180, 60, 0.35), inset 0 0 6px rgba(255, 180, 60, 0.12);
         }
         .hs.shop:hover {
-            background: rgba(255,200,50,0.4) !important;
-            border-color: #ffc832 !important;
+            background: rgba(230, 150, 30, 0.9);
+            border-color: #ffc832;
+            box-shadow: 0 0 20px rgba(255, 180, 60, 0.8);
         }
         .building-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
             gap: 8px;
-            background: #fff;
+            background: rgba(16, 28, 56, 0.6);
+            border: 1px solid rgba(0, 200, 255, 0.15);
             border-radius: 16px;
             padding: 14px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
         .building-chip {
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 12px 4px;
-            background: linear-gradient(135deg, #faf6ed 0%, #f0e8d8 100%);
-            border: 1.5px solid #e8dfd0;
+            background: rgba(30, 45, 85, 0.7);
+            border: 1px solid rgba(0, 200, 255, 0.25);
             border-radius: 10px;
-            color: #6b5435;
+            color: #a8d8ff;
             font-size: 14px;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.25s;
             text-decoration: none;
+            animation: cardIn 0.5s ease both;
         }
         .building-chip:hover {
-            background: linear-gradient(135deg, #8b6f47 0%, #6b5435 100%);
+            background: linear-gradient(135deg, #00a8e8 0%, #7b68ee 100%);
+            border-color: rgba(0, 200, 255, 0.6);
             color: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(139, 111, 71, 0.25);
+            transform: translateY(-3px);
+            box-shadow: 0 0 20px rgba(0, 200, 255, 0.5);
         }
         .building-chip.shop {
-            background: #fef5f0;
-            border-color: #f0d8c4;
-            color: #b8552e;
+            background: rgba(60, 40, 12, 0.6);
+            border-color: rgba(255, 180, 60, 0.3);
+            color: #ffd77a;
         }
         .building-chip.shop:hover {
-            background: linear-gradient(135deg, #c8552e 0%, #a03a1c 100%);
+            background: linear-gradient(135deg, #e89620 0%, #c06000 100%);
             color: #fff;
+            box-shadow: 0 0 20px rgba(255, 180, 60, 0.5);
         }
         .building-chip small {
             display: block;
@@ -200,38 +242,42 @@
             gap: 14px;
         }
         .layout-card {
-            background: #fff;
+            background: rgba(16, 28, 56, 0.7);
+            border: 1px solid rgba(0, 200, 255, 0.18);
             border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            transition: all 0.2s;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+            transition: all 0.3s;
             cursor: pointer;
             text-decoration: none;
             color: inherit;
             display: block;
+            animation: cardIn 0.5s ease both;
         }
         .layout-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(139, 111, 71, 0.15);
+            transform: translateY(-4px);
+            border-color: rgba(0, 200, 255, 0.55);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 24px rgba(0, 200, 255, 0.2);
         }
         .layout-cover {
-            background: linear-gradient(135deg, #f5efe6 0%, #e8dfd0 100%);
+            background: linear-gradient(135deg, rgba(0, 200, 255, 0.1) 0%, rgba(123, 104, 238, 0.08) 100%);
             padding: 18px;
             display: flex;
             align-items: center;
             gap: 14px;
-            border-bottom: 1px solid #f0e8d8;
+            border-bottom: 1px solid rgba(0, 200, 255, 0.15);
         }
         .layout-name {
             font-size: 22px;
             font-weight: 700;
-            color: #6b5435;
+            color: #e8ecff;
             font-family: 'STSong', '宋体', serif;
+            text-shadow: 0 0 12px rgba(0, 200, 255, 0.3);
         }
         .layout-area {
             font-size: 28px;
             font-weight: 700;
-            color: #8b6f47;
+            color: #7fd8ff;
         }
         .layout-area sup {
             font-size: 14px;
@@ -241,23 +287,23 @@
         .layout-img {
             width: 100%;
             display: block;
-            background: #f5efe6;
+            background: #0b1226;
             min-height: 200px;
             object-fit: contain;
         }
         .layout-img-missing {
             padding: 60px 20px;
             text-align: center;
-            color: #bbb;
+            color: #5f6d96;
             font-size: 13px;
-            background: #faf8f5;
+            background: #0b1226;
         }
         .layout-body {
             padding: 14px 18px;
         }
         .layout-desc {
             font-size: 12px;
-            color: #888;
+            color: #8a93b8;
             margin-bottom: 10px;
         }
         .layout-features {
@@ -266,20 +312,21 @@
             flex-wrap: wrap;
         }
         .layout-feature {
-            background: #faf6ed;
-            color: #6b5435;
+            background: rgba(0, 200, 255, 0.1);
+            border: 1px solid rgba(0, 200, 255, 0.25);
+            color: #7fd8ff;
             padding: 4px 10px;
             border-radius: 12px;
             font-size: 11px;
         }
         .layout-buildings {
             padding: 10px 18px 16px;
-            border-top: 1px dashed #f0e8d8;
+            border-top: 1px dashed rgba(0, 200, 255, 0.15);
             font-size: 11px;
-            color: #999;
+            color: #5f6d96;
         }
         .layout-buildings b {
-            color: #6b5435;
+            color: #a8d8ff;
             margin-right: 4px;
         }
 
@@ -291,20 +338,23 @@
             margin-bottom: 24px;
         }
         .kpi {
-            background: #fff;
+            background: rgba(16, 28, 56, 0.7);
+            border: 1px solid rgba(0, 200, 255, 0.18);
             border-radius: 12px;
             padding: 16px 12px;
             text-align: center;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: cardIn 0.5s ease both;
         }
         .kpi .num {
             font-size: 24px;
             font-weight: 700;
-            color: #6b5435;
+            color: #7fd8ff;
+            text-shadow: 0 0 14px rgba(0, 200, 255, 0.45);
         }
         .kpi .lbl {
             font-size: 11px;
-            color: #999;
+            color: #8a93b8;
             margin-top: 4px;
         }
 
@@ -313,7 +363,8 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.85);
+            background: rgba(4, 8, 20, 0.88);
+            backdrop-filter: blur(6px);
             z-index: 999;
             align-items: center;
             justify-content: center;
@@ -321,27 +372,33 @@
         }
         .modal-overlay.show { display: flex; }
         .modal-box {
-            background: #fff;
-            border-radius: 12px;
+            background: linear-gradient(160deg, #101c3c 0%, #0b1226 100%);
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            border-radius: 14px;
             max-width: 100%;
             max-height: 95vh;
             overflow: auto;
             position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 200, 255, 0.15);
+            animation: modalUp 0.3s ease;
         }
+        @keyframes modalUp { from { opacity: 0; transform: translateY(20px) scale(0.97); } to { opacity: 1; transform: none; } }
         .modal-close {
             position: absolute;
             top: 10px;
             right: 10px;
-            background: rgba(0,0,0,0.5);
-            color: #fff;
-            border: none;
+            background: rgba(0, 200, 255, 0.15);
+            border: 1px solid rgba(0, 200, 255, 0.4);
+            color: #7fd8ff;
             border-radius: 50%;
             width: 32px;
             height: 32px;
             font-size: 18px;
             cursor: pointer;
             z-index: 10;
+            transition: all 0.2s;
         }
+        .modal-close:hover { background: rgba(0, 200, 255, 0.35); color: #fff; }
         .modal-img {
             display: block;
             max-width: 100%;
@@ -350,16 +407,23 @@
         .modal-empty {
             padding: 80px 40px;
             text-align: center;
-            color: #999;
+            color: #5f6d96;
         }
 
         .footer {
             text-align: center;
             padding: 30px 16px 40px;
-            color: #999;
+            color: #5f6d96;
             font-size: 11px;
-            border-top: 1px solid #f0e8d8;
+            border-top: 1px solid rgba(0, 200, 255, 0.15);
             margin-top: 30px;
+        }
+        .footer b { color: #7fd8ff; }
+
+        /* 入场动画 */
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -426,13 +490,30 @@
             const shopTotal = allData.filter(d => d.type === '商铺').length;
 
             document.getElementById('overview').innerHTML = `
-                <div class="kpi"><div class="num">${total}</div><div class="lbl">总套数</div></div>
-                <div class="kpi"><div class="num" style="color:#c62828">${sold}</div><div class="lbl">已售</div></div>
-                <div class="kpi"><div class="num" style="color:#ef6c00">${sub}</div><div class="lbl">认购</div></div>
-                <div class="kpi"><div class="num">${unsold}</div><div class="lbl">在售</div></div>
-                <div class="kpi"><div class="num">${houseTotal}</div><div class="lbl">住宅</div></div>
-                <div class="kpi"><div class="num">${shopTotal}</div><div class="lbl">商铺</div></div>
+                <div class="kpi"><div class="num" data-v="${total}">0</div><div class="lbl">总套数</div></div>
+                <div class="kpi"><div class="num" data-v="${sold}" style="color:#ff5d7a;text-shadow:0 0 14px rgba(255,93,122,0.5)">0</div><div class="lbl">已售</div></div>
+                <div class="kpi"><div class="num" data-v="${sub}" style="color:#ffb347;text-shadow:0 0 14px rgba(255,179,71,0.5)">0</div><div class="lbl">认购</div></div>
+                <div class="kpi"><div class="num" data-v="${unsold}">0</div><div class="lbl">在售</div></div>
+                <div class="kpi"><div class="num" data-v="${houseTotal}">0</div><div class="lbl">住宅</div></div>
+                <div class="kpi"><div class="num" data-v="${shopTotal}">0</div><div class="lbl">商铺</div></div>
             `;
+            // 数字滚动
+            document.querySelectorAll('#overview .num').forEach((el, i) => {
+                const target = parseInt(el.dataset.v, 10);
+                setTimeout(() => {
+                    const start = performance.now(), dur = 800;
+                    function tick(now) {
+                        const p = Math.min((now - start) / dur, 1);
+                        el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+                        if (p < 1) requestAnimationFrame(tick);
+                    }
+                    requestAnimationFrame(tick);
+                }, i * 120);
+            });
+            // 卡片入场 stagger
+            document.querySelectorAll('#overview .kpi').forEach((el, i) => {
+                el.style.animationDelay = (i * 0.1) + 's';
+            });
         }
 
         // 总平图楼栋列表
@@ -446,6 +527,10 @@
                     ${b}<small>查看销控</small>
                 </a>`;
             }).join('');
+            // 入场 stagger
+            document.querySelectorAll('.building-chip').forEach((el, i) => {
+                el.style.animationDelay = (i * 0.04) + 's';
+            });
         }
 
         // 户型数据
@@ -474,6 +559,10 @@
                     </div>
                 </a>`;
             }).join('');
+            // 入场 stagger
+            document.querySelectorAll('.layout-card').forEach((el, i) => {
+                el.style.animationDelay = (i * 0.12) + 's';
+            });
             // 异步尝试 jpg → svg 加载
             Object.keys(layouts).forEach(key => loadFloorplan(key));
         }
@@ -549,13 +638,41 @@
             {id:'20商铺#',label:'20商铺#',x:23.5,y:9.0, w:3.5,h:3.5,shop:true},
         ];
 
+        // 网格轨道匹配: 预定义不重叠网格点, 按作者坐标就近匹配, 冲突顺延
+        function resolveOverlaps(items) {
+            const gridX = [4, 11, 18, 25, 32, 39, 46, 53, 60];
+            const gridY = [3, 13, 23, 33, 43];
+            const slots = [];
+            for (const gy of gridY) for (const gx of gridX) slots.push({ x: gx, y: gy, used: false });
+            const placed = [];
+            // 按作者坐标从左上到右下处理, 保证先占位的保持意图
+            const sorted = [...items].sort((a, b) => (a.y - b.y) || (a.x - b.x));
+            for (const it of sorted) {
+                // 计算到每个空槽的距离
+                const free = slots.filter(s => !s.used);
+                free.sort((p, q) =>
+                    ((p.x - it.x) ** 2 + (p.y - it.y) ** 2) - ((q.x - it.x) ** 2 + (q.y - it.y) ** 2));
+                const slot = free[0];
+                slot.used = true;
+                placed.push({ ...it, x: slot.x, y: slot.y });
+            }
+            return placed;
+        }
+
         function renderPlanHotspots() {
             const wrap = document.getElementById('planHotspots');
             if (!wrap) return;
-            wrap.innerHTML = buildings_hotspots.map(b => `
+            const items = buildings_hotspots.map(b => ({
+                id: b.id, label: b.label, shop: !!b.shop,
+                x: b.x, y: b.y,
+                w: b.shop ? 5.2 : 5.6,
+                h: b.shop ? 6 : 7.5,
+            }));
+            const placed = resolveOverlaps(items);
+            wrap.innerHTML = placed.map(b => `
                 <a class="hs${b.shop ? ' shop' : ''}" href="sales_control_v2.html?b=${encodeURIComponent(b.id)}" title="${b.id}"
                    style="left:${b.x}%;top:${b.y}%;width:${b.w}%;height:${b.h}%;">
-                    <span class="hs-label">${b.label}</span>
+                    <span class="hs-label">${b.label.replace('<br>', ' ')}</span>
                 </a>`).join('');
         }
 
